@@ -1,4 +1,4 @@
-read me[README.md](https://github.com/user-attachments/files/26871087/README.md)
+[README.md](https://github.com/user-attachments/files/26871087/README.md)
 # y-BE Design System
 
 > 근태관리의 Begin부터 End까지 — 관리자 페이지 공식 디자인 시스템
