@@ -3,7 +3,7 @@
 
 > 근태관리의 Begin부터 End까지 — 관리자 페이지 공식 디자인 시스템
 
-[![Design System](https://img.shields.io/badge/Design%20System-v2.0-1E52CC?style=flat-square)](https://your-username.github.io/y-be-design-system/)
+[![Design System](https://img.shields.io/badge/Design%20System-v2.0-1E52CC?style=flat-square)](https://seonghyeonOrNot.github.io/ybe-design-system/)
 [![License](https://img.shields.io/badge/License-Internal-gray?style=flat-square)]()
 
 ---
