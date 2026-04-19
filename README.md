@@ -10,7 +10,7 @@
 
 ## 🔗 바로가기
 
-**[→ 디자인 시스템 문서 보기](https://your-username.github.io/y-be-design-system/)**
+**[→ 디자인 시스템 문서 보기](https://seonghyeonOrNot.github.io/ybe-design-system/)**
 
 ---
 
