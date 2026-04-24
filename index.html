@@ -1,1577 +1,816 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>y-BE Design System</title>
+<meta charset="utf-8">
+<title>HELIXBEAM — Mechanical System Guide</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:#050505;overflow-x:hidden;font-family:'IBM Plex Mono',monospace;color:#fff;}
+#canvas-container{position:fixed;top:0;left:0;width:100%;height:100vh;z-index:0;}
+canvas{display:block;}
+.scroll-driver{position:relative;z-index:1;height:800vh;}
+.ui-layer{position:fixed;top:0;left:0;width:100%;height:100vh;z-index:10;pointer-events:none;}
+.ui-layer::before{content:'';position:absolute;inset:22px 28px;border:1px solid rgba(17,17,17,0.24);background:linear-gradient(90deg,rgba(17,17,17,0.05) 0 1px,transparent 1px 100%),linear-gradient(180deg,rgba(255,255,255,0.20),rgba(244,241,232,0.08));background-size:96px 100%,100% 100%;pointer-events:none;}
+.ui-layer::after{content:'MECHANICAL SYSTEM GUIDE';position:absolute;right:34px;top:50%;transform:translateY(-50%) rotate(90deg);transform-origin:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;letter-spacing:0.22em;color:rgba(17,17,17,0.56);pointer-events:none;}
+.ui-layer>*{position:absolute;}
 
-  :root {
-    /* ── Brand Colors ── */
-    --primary:        #1E52CC;
-    --primary-hover:  #1743A8;
-    --primary-light:  #EBF0FB;
-    --primary-bg:     #F8F9FF;
+.hero-brand{position:absolute;top:34px;left:44px;transform:none;text-align:left;opacity:0;transition:opacity 1.2s;white-space:nowrap;padding:0;background:transparent;border:none;border-radius:0;backdrop-filter:none;}
+.hero-brand.visible{opacity:1;}
+.hero-brand-sub{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;letter-spacing:0.26em;color:#111;text-transform:uppercase;margin-bottom:8px;}
+.hero-brand-main{font-family:'Archivo Black','Pretendard',sans-serif;font-size:96px;font-weight:900;letter-spacing:-0.06em;color:#101010;line-height:0.82;text-transform:uppercase;text-shadow:none;}
+.hero-brand-main::after{content:'®';font-family:'IBM Plex Mono',monospace;font-size:16px;vertical-align:top;margin-left:5px;}
 
-    /* ── Sidebar ── */
-    --sidebar-bg:     #2D3A8C;
-    --sidebar-active: #1E3A8A;
-    --sidebar-text:   #FFFFFF;
-    --sidebar-sub:    rgba(255,255,255,0.72);
-    --sidebar-width:  130px;
+.hero-tagline{position:absolute;left:44px;bottom:46px;transform:none;text-align:left;opacity:0;transition:opacity 1.2s 0.4s;white-space:nowrap;padding:0;background:transparent;border:none;border-radius:0;backdrop-filter:none;}
+.hero-tagline.visible{opacity:1;}
+.tagline-main{font-family:'Pretendard',sans-serif;font-size:46px;font-weight:300;letter-spacing:-0.065em;color:#111;margin-bottom:12px;text-shadow:none;}
+.tagline-sub{font-family:'Pretendard',sans-serif;font-size:16px;font-weight:500;letter-spacing:-0.02em;color:#333;margin-bottom:22px;text-shadow:none;}
+.scroll-hint{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:0.32em;color:#111;text-transform:uppercase;}
+.scroll-line{width:64px;height:2px;background:#111;margin:10px 0 0;animation:sp 2s infinite;}
+@keyframes sp{0%,100%{opacity:0.25;}50%{opacity:1;}}
 
-    /* ── Table Header ── */
-    --table-header-bg:   #2D3A8C;
-    --table-header-text: #FFFFFF;
+.poster-corner{position:absolute;width:72px;height:22px;border-top:2px solid #111;border-bottom:0;opacity:.8;}
+/* PHASE LABEL — center bottom */
+.phase-label{position:absolute;bottom:48px;left:50%;transform:translateX(-50%);text-align:center;opacity:0;transition:opacity 0.5s;}
+.phase-label.visible{opacity:1;}
+.phase-title{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;letter-spacing:0.28em;text-transform:uppercase;color:#111;margin-bottom:6px;}
+.phase-desc{font-family:'Pretendard',sans-serif;font-size:14px;font-weight:500;letter-spacing:-0.02em;color:#333;}
 
-    /* ── Semantic ── */
-    --danger:         #DC2626;
-    --danger-light:   #FEE2E2;
-    --success:        #16A34A;
-    --success-light:  #DCFCE7;
-    --warning:        #D97706;
-    --warning-light:  #FEF3C7;
-    --info:           #1E52CC;
-    --info-light:     #EBF0FB;
+/* PART LABELS */
+.part-label{position:absolute;opacity:0;transition:opacity 0.35s ease;pointer-events:none;}
+.part-label-line{height:1px;background:rgba(17,17,17,0.45);margin-bottom:10px;box-shadow:none;}
+.part-label-name{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;letter-spacing:0.24em;color:#111;text-transform:uppercase;margin-bottom:7px;text-shadow:none;}
+.part-label-desc{font-size:17px;line-height:1.42;font-family:'Pretendard',sans-serif;font-weight:500;color:#3B3B38;letter-spacing:-0.035em;text-shadow:none;}
+.part-label.active{opacity:1;filter:none;}
+.lbl-right .part-label-line{margin-left:auto;}
+.lbl-right .part-label-name{text-align:right;}
+.lbl-right .part-label-desc{text-align:right;}
 
-    /* ── Neutral ── */
-    --gray-50:   #F9FAFB;
-    --gray-100:  #F3F4F6;
-    --gray-200:  #E5E7EB;
-    --gray-300:  #D1D5DB;
-    --gray-400:  #9CA3AF;
-    --gray-500:  #6B7280;
-    --gray-600:  #4B5563;
-    --gray-700:  #374151;
-    --gray-800:  #1F2937;
-    --gray-900:  #111827;
+/* STAGE INDICATOR */
+.stage-indicator{position:absolute;bottom:48px;right:48px;text-align:right;opacity:0;transition:opacity 0.6s;}
+.stage-indicator.visible{opacity:1;}
+.stage-letter{font-family:'Archivo Black',sans-serif;font-size:88px;font-weight:900;line-height:0.9;color:#111;}
+.stage-name{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;margin-top:6px;color:#111!important;}
+.stage-kr{font-family:'Pretendard',sans-serif;font-size:16px;font-weight:500;margin-top:10px;line-height:1.6;max-width:220px;text-align:right;color:#333!important;}
 
-    /* ── Work Type Chips ── */
-    --chip-clockin-bg:   #EDE9FE;
-    --chip-clockin-text: #7C3AED;
-    --chip-clockout-bg:  #FCE7F3;
-    --chip-clockout-text:#BE185D;
+/* SPEC CARD */
+.spec-card{position:absolute;bottom:48px;left:48px;width:250px;opacity:0;transition:opacity 0.6s;background:rgba(255,255,255,0.70);border:1px solid rgba(17,17,17,0.28);border-radius:0;padding:18px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.06);}
+.spec-card::before{content:'';position:absolute;top:0;left:0;width:5px;height:100%;background:#E84A2A;}
+.spec-card.visible{opacity:1;}
+.spec-card-title{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#111;margin-bottom:12px;}
+.spec-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(17,17,17,0.12);}
+.spec-row:last-child{border-bottom:none;}
+.spec-key{font-size:10px;font-weight:700;letter-spacing:0.08em;color:#111;}
+.spec-val{font-size:11px;font-weight:600;color:#333;}
 
-    /* ── Typography ── */
-    --font-base: 'Noto Sans KR', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+/* PHILOSOPHY */
+.philosophy{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;opacity:0;transition:opacity 0.8s;width:640px;}
+.philosophy.visible{opacity:1;}
+.phil-eyebrow{font-size:9px;letter-spacing:0.3em;color:#3A3A38;text-transform:uppercase;margin-bottom:28px;}
+.phil-body{font-family:'Pretendard',sans-serif;font-size:18px;font-weight:300;letter-spacing:-0.01em;line-height:1.9;color:#6A6860;margin-bottom:36px;}
+.phil-body em{font-style:normal;color:#C4BEB2;}
+.phil-signal{font-size:9px;letter-spacing:0.3em;color:#4A7AAA;text-transform:uppercase;}
 
-    --text-page-title: 20px;
-    --text-section:    16px;
-    --text-body:       13px;
-    --text-caption:    11px;
-    --text-stat:       24px;
+/* MVQ DOTS */
+.mvq-nav{position:absolute;top:48px;right:48px;display:flex;flex-direction:column;gap:10px;opacity:0;transition:opacity 0.4s;}
+.mvq-nav.visible{opacity:1;}
+.mvq-item{display:flex;align-items:center;gap:8px;opacity:0.2;transition:opacity 0.3s;}
+.mvq-item.on{opacity:1;}
+.mvq-dot{width:5px;height:5px;border-radius:50%;background:#3A3A38;transition:background 0.3s;}
+.mvq-item.on .mvq-dot{background:var(--c);}
+.mvq-text{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:#3A3A38;transition:color 0.3s;}
+.mvq-item.on .mvq-text{color:var(--c);}
+@media (max-width: 760px){
+  .hero-brand{top:28px;padding:12px 20px;}
+  .hero-brand-main{font-size:48px;letter-spacing:0.06em;}
+  .hero-brand-sub{font-size:9px;letter-spacing:0.28em;}
+  .hero-tagline{bottom:42px;width:calc(100% - 32px);white-space:normal;padding:16px 18px 20px;}
+  .tagline-main{font-size:24px;}
+  .tagline-sub{font-size:13px;line-height:1.55;}
+}
 
-    /* ── Radius / Shadow ── */
-    --radius-sm:  4px;
-    --radius-md:  6px;
-    --radius-lg:  8px;
-    --radius-pill: 999px;
+/* Cinematic ending color system */
+:root{
+  --dynamic-ui:#111111;
+  --dynamic-muted:#333333;
+  --dynamic-soft:rgba(17,17,17,0.56);
+  --dynamic-line:rgba(17,17,17,0.45);
+  --dynamic-card:rgba(255,255,255,0.70);
+  --dynamic-card-border:rgba(17,17,17,0.28);
+  --dynamic-grid:rgba(17,17,17,0.05);
+  --ending-overlay:0;
+  --guide-opacity:1;
+}
+.ui-layer{background:rgba(0,0,0,var(--ending-overlay));transition:background 0.2s linear;}
+.hero-brand-sub,.hero-brand-main,.phase-title,.part-label-name,.stage-letter,.stage-name,.spec-card-title,.spec-key,.scroll-hint{color:var(--dynamic-ui)!important;}
+.tagline-main,.tagline-sub,.phase-desc,.part-label-desc,.stage-kr,.spec-val,.phil-body,.phil-eyebrow,.phil-signal{color:var(--dynamic-muted)!important;}
+.part-label-line{background:var(--dynamic-line)!important;}
+.ui-layer::before{border-color:var(--dynamic-card-border)!important;background:linear-gradient(90deg,var(--dynamic-grid) 0 1px,transparent 1px 100%),linear-gradient(180deg,rgba(255,255,255,0.20),rgba(244,241,232,0.08))!important;background-size:96px 100%,100% 100%!important;}
+.ui-layer::after{color:var(--dynamic-soft)!important;opacity:var(--guide-opacity)!important;transition:opacity 0.2s linear;}
+.spec-card{background:var(--dynamic-card)!important;border-color:var(--dynamic-card-border)!important;}
+.scroll-line{background:var(--dynamic-ui)!important;}
+.philosophy{width:min(760px,calc(100vw - 64px));}
+.philosophy.visible{filter:drop-shadow(0 0 32px rgba(255,255,255,0.18));}
+.phil-eyebrow{font-size:11px!important;font-weight:700!important;letter-spacing:0.42em!important;}
+.phil-body{font-size:23px!important;font-weight:300!important;line-height:2.0!important;color:var(--dynamic-ui)!important;}
+.phil-body em{color:var(--dynamic-ui)!important;font-weight:500!important;}
+.phil-signal{font-size:11px!important;font-weight:700!important;letter-spacing:0.42em!important;color:var(--dynamic-ui)!important;}
 
-    --shadow-sm:  0 1px 3px rgba(0,0,0,0.08);
-    --shadow-md:  0 4px 12px rgba(0,0,0,0.12);
-    --shadow-lg:  0 8px 24px rgba(0,0,0,0.16);
+/* Final copy + logo ending — isolated from product motion */
+.tagline-main{font-weight:700!important;letter-spacing:-0.055em!important;}
+.tagline-sub{font-size:18px!important;line-height:1.72!important;font-weight:500!important;white-space:normal!important;max-width:520px!important;}
+.philosophy{width:min(820px,calc(100vw - 64px))!important;}
+.phil-body{font-size:clamp(30px,4.8vw,58px)!important;font-weight:650!important;line-height:1.55!important;letter-spacing:-0.055em!important;color:#fff!important;text-shadow:0 0 36px rgba(255,255,255,0.24), 0 12px 48px rgba(0,0,0,0.72)!important;}
+.philosophy{mix-blend-mode:normal;}
+.ending-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.92);opacity:0;pointer-events:none;font-family:'Archivo Black','Pretendard',sans-serif;font-size:clamp(56px,10vw,148px);font-weight:900;letter-spacing:-0.065em;color:#fff;text-shadow:0 0 28px rgba(255,255,255,0.22),0 20px 80px rgba(0,0,0,0.85);z-index:30;transition:none;}
+@media (max-width: 760px){.phil-body{font-size:30px!important;}.ending-logo{font-size:54px;}}
 
-    /* ── Spacing ── */
-    --sp-1:  4px;
-    --sp-2:  8px;
-    --sp-3:  12px;
-    --sp-4:  16px;
-    --sp-5:  20px;
-    --sp-6:  24px;
-    --sp-8:  32px;
-    --sp-10: 40px;
-
-    /* ── Form / Button ── */
-    --input-height:  34px;
-    --btn-height:    34px;
-    --btn-height-sm: 28px;
-
-    /* ── Layout ── */
-    --topbar-height: 52px;
-    --content-bg:    #FFFFFF;
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: var(--font-base);
-    font-size: var(--text-body);
-    color: var(--gray-800);
-    background: var(--gray-50);
-    line-height: 1.6;
-  }
-
-  /* ── Page Shell ── */
-  .ds-shell {
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    min-height: 100vh;
-  }
-
-  /* ── Side Nav ── */
-  .ds-nav {
-    background: var(--sidebar-bg);
-    color: var(--sidebar-text);
-    padding: var(--sp-6) 0;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
-  }
-  .ds-nav-logo {
-    padding: 0 var(--sp-5) var(--sp-6);
-    border-bottom: 1px solid rgba(255,255,255,0.12);
-    margin-bottom: var(--sp-4);
-  }
-  .ds-nav-logo .brand {
-    font-size: 22px;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: -0.5px;
-  }
-  .ds-nav-logo .brand span { color: #93C5FD; }
-  .ds-nav-logo .tagline {
-    font-size: 10px;
-    color: var(--sidebar-sub);
-    margin-top: 2px;
-  }
-  .ds-nav-section {
-    padding: var(--sp-2) var(--sp-5);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.4);
-    margin-top: var(--sp-4);
-  }
-  .ds-nav a {
-    display: block;
-    padding: 7px var(--sp-5);
-    font-size: 13px;
-    color: var(--sidebar-sub);
-    text-decoration: none;
-    transition: all 0.15s;
-    border-left: 3px solid transparent;
-  }
-  .ds-nav a:hover { color: #fff; background: rgba(255,255,255,0.06); }
-  .ds-nav a.active {
-    color: #fff;
-    background: var(--sidebar-active);
-    border-left-color: #60A5FA;
-    font-weight: 600;
-  }
-
-  /* ── Main Content ── */
-  .ds-main {
-    padding: var(--sp-8) var(--sp-10);
-    max-width: 1100px;
-  }
-
-  /* ── Section ── */
-  .ds-section {
-    margin-bottom: var(--sp-10);
-  }
-  .ds-section-title {
-    font-size: var(--text-page-title);
-    font-weight: 700;
-    color: var(--gray-900);
-    margin-bottom: var(--sp-2);
-    padding-bottom: var(--sp-3);
-    border-bottom: 2px solid var(--primary);
-    display: flex;
-    align-items: center;
-    gap: var(--sp-2);
-  }
-  .ds-section-title .badge {
-    font-size: 10px;
-    font-weight: 600;
-    background: var(--primary-light);
-    color: var(--primary);
-    padding: 2px 8px;
-    border-radius: var(--radius-pill);
-    letter-spacing: 0.04em;
-  }
-  .ds-subsection-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--gray-600);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin: var(--sp-5) 0 var(--sp-3);
-  }
-  .ds-desc {
-    font-size: 13px;
-    color: var(--gray-500);
-    margin-bottom: var(--sp-4);
-    line-height: 1.7;
-  }
-
-  /* ── Preview Box ── */
-  .preview-box {
-    background: var(--content-bg);
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius-lg);
-    padding: var(--sp-6);
-    margin-bottom: var(--sp-3);
-  }
-  .preview-box.dark {
-    background: var(--sidebar-bg);
-  }
-  .preview-box.grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--sp-4);
-  }
-  .preview-box.grid-3 {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: var(--sp-4);
-  }
-  .preview-box.flex {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--sp-3);
-  }
-
-  /* ── Code Snippet ── */
-  .code-block {
-    background: var(--gray-900);
-    color: #A5F3FC;
-    border-radius: var(--radius-md);
-    padding: var(--sp-4);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    line-height: 1.7;
-    overflow-x: auto;
-    margin-bottom: var(--sp-4);
-  }
-  .code-block .cm { color: #6B7280; }
-  .code-block .cv { color: #FDE68A; }
-  .code-block .cs { color: #86EFAC; }
-
-  /* ════════════════════════════════════════
-     COMPONENTS
-  ════════════════════════════════════════ */
-
-  /* ── Color Swatch ── */
-  .swatch-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: var(--sp-3);
-  }
-  .swatch {
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-  }
-  .swatch-color {
-    height: 60px;
-  }
-  .swatch-info {
-    background: #fff;
-    padding: 8px 10px;
-    border-top: 1px solid var(--gray-100);
-  }
-  .swatch-name {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--gray-700);
-  }
-  .swatch-hex {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--gray-400);
-    margin-top: 2px;
-  }
-
-  /* ── Buttons ── */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    height: var(--btn-height);
-    padding: 0 16px;
-    border-radius: var(--radius-md);
-    font-family: var(--font-base);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    transition: all 0.15s;
-    text-decoration: none;
-    white-space: nowrap;
-  }
-  .btn-sm { height: var(--btn-height-sm) !important; padding: 0 12px !important; font-size: 12px !important; }
-  .btn-primary   { background: var(--primary); color: #fff; }
-  .btn-primary:hover { background: var(--primary-hover); }
-  .btn-secondary { background: #fff; color: var(--primary); border: 1px solid var(--primary); }
-  .btn-secondary:hover { background: var(--primary-light); }
-  .btn-danger    { background: var(--danger); color: #fff; }
-  .btn-danger:hover { background: #B91C1C; }
-  .btn-ghost     { background: transparent; color: var(--gray-600); border: 1px solid var(--gray-300); }
-  .btn-ghost:hover { background: var(--gray-50); border-color: var(--gray-400); }
-  .btn-icon { width: 34px; height: 34px; padding: 0; border-radius: var(--radius-md); background: var(--primary); color: #fff; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; }
-
-  /* ── Badges ── */
-  .badge-pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 10px;
-    border-radius: var(--radius-pill);
-    font-size: 11px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .badge-blue   { background: #DBEAFE; color: #1D4ED8; }
-  .badge-gray   { background: var(--gray-200); color: var(--gray-600); }
-  .badge-red    { background: var(--danger-light); color: var(--danger); }
-  .badge-yellow { background: var(--warning-light); color: #92400E; }
-  .badge-green  { background: var(--success-light); color: #166534; }
-  .badge-purple { background: #EDE9FE; color: #5B21B6; }
-  .badge-update { background: #F472B6; color: #fff; font-size: 10px; padding: 2px 7px; }
-
-  /* ── Work Type Chips ── */
-  .chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 8px;
-    border-radius: var(--radius-sm);
-    font-size: 11px;
-    font-weight: 500;
-  }
-  .chip-clockin  { background: var(--chip-clockin-bg);  color: var(--chip-clockin-text); }
-  .chip-clockout { background: var(--chip-clockout-bg); color: var(--chip-clockout-text); }
-  .chip-basic    { background: #EFF6FF; color: #1E52CC; }
-  .chip-shift    { background: #ECFDF5; color: #065F46; }
-  .chip-icon { font-size: 9px; }
-
-  /* ── Status Badge (근태 상태) ── */
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 10px;
-    border-radius: var(--radius-sm);
-    font-size: 11px;
-    font-weight: 600;
-  }
-  .status-absent   { background: var(--primary-light); color: var(--primary); }
-  .status-present  { background: var(--success-light); color: var(--success); }
-  .status-late     { background: var(--warning-light); color: var(--warning); }
-  .status-leave    { background: var(--gray-100); color: var(--gray-500); }
-  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-
-  /* ── Stat Card ── */
-  .stat-card {
-    background: var(--primary-bg);
-    border-radius: var(--radius-lg);
-    padding: var(--sp-4) var(--sp-5);
-    text-align: center;
-    min-width: 80px;
-  }
-  .stat-card .label {
-    font-size: 11px;
-    color: var(--gray-500);
-    font-weight: 500;
-    margin-bottom: 4px;
-  }
-  .stat-card .value {
-    font-size: var(--text-stat);
-    font-weight: 700;
-    color: var(--gray-900);
-    line-height: 1;
-  }
-  .stat-card .value.primary { color: var(--primary); }
-  .stat-card .value.danger  { color: var(--danger); }
-  .stat-card .value.warning { color: var(--warning); }
-
-  /* ── Info Card (공지/안내) ── */
-  .info-card {
-    background: var(--primary-light);
-    border-left: 3px solid var(--primary);
-    border-radius: var(--radius-md);
-    padding: var(--sp-3) var(--sp-4);
-    font-size: 13px;
-    color: var(--gray-700);
-  }
-  .info-card p { margin: 2px 0; }
-  .info-card p::before { content: '✓ '; color: var(--primary); font-weight: 700; }
-
-  /* ── Form Elements ── */
-  .form-input {
-    height: var(--input-height);
-    padding: 0 12px;
-    border: 1px solid var(--gray-300);
-    border-radius: var(--radius-md);
-    font-family: var(--font-base);
-    font-size: 13px;
-    color: var(--gray-800);
-    outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
-    width: 100%;
-  }
-  .form-input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(30,82,204,0.12);
-  }
-  .form-input::placeholder { color: var(--gray-400); }
-
-  .form-select {
-    height: var(--input-height);
-    padding: 0 28px 0 12px;
-    border: 1px solid var(--gray-300);
-    border-radius: var(--radius-md);
-    font-family: var(--font-base);
-    font-size: 13px;
-    color: var(--gray-800);
-    outline: none;
-    appearance: none;
-    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236B7280'/%3E%3C/svg%3E") no-repeat right 10px center;
-    cursor: pointer;
-    transition: border-color 0.15s;
-  }
-  .form-select:focus { border-color: var(--primary); }
-
-  .form-label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--gray-600);
-    margin-bottom: 5px;
-  }
-  .form-group { margin-bottom: var(--sp-4); }
-
-  /* ── Search Bar ── */
-  .search-bar {
-    display: inline-flex;
-    align-items: center;
-    gap: 0;
-  }
-  .search-tab {
-    height: var(--input-height);
-    padding: 0 12px;
-    border: 1px solid var(--gray-300);
-    border-right: none;
-    border-radius: var(--radius-md) 0 0 var(--radius-md);
-    font-size: 12px;
-    font-weight: 600;
-    background: var(--primary);
-    color: #fff;
-    display: flex;
-    align-items: center;
-  }
-  .search-input {
-    height: var(--input-height);
-    padding: 0 12px;
-    border: 1px solid var(--gray-300);
-    font-size: 13px;
-    font-family: var(--font-base);
-    outline: none;
-    min-width: 200px;
-    color: var(--gray-500);
-  }
-  .search-btn {
-    height: var(--input-height);
-    width: 36px;
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-  }
-
-  /* ── Table ── */
-  .ds-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: var(--text-body);
-  }
-  .ds-table th {
-    background: var(--table-header-bg);
-    color: var(--table-header-text);
-    padding: 10px 14px;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .ds-table th:first-child { border-radius: var(--radius-sm) 0 0 0; }
-  .ds-table th:last-child  { border-radius: 0 var(--radius-sm) 0 0; }
-  .ds-table td {
-    padding: 10px 14px;
-    text-align: center;
-    border-bottom: 1px solid var(--gray-100);
-    color: var(--gray-700);
-    font-size: 13px;
-  }
-  .ds-table tr:hover td { background: var(--gray-50); }
-  .ds-table tr:last-child td { border-bottom: none; }
-  .table-wrap {
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-  }
-
-  /* ── Modal ── */
-  .modal-demo {
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: var(--shadow-lg);
-    max-width: 540px;
-  }
-  .modal-header {
-    background: #fff;
-    padding: var(--sp-4) var(--sp-5);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--gray-100);
-  }
-  .modal-header .title {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--gray-900);
-    display: flex;
-    align-items: center;
-    gap: var(--sp-2);
-  }
-  .modal-body {
-    background: #fff;
-    padding: var(--sp-5);
-  }
-  .modal-footer {
-    background: var(--gray-50);
-    padding: var(--sp-3) var(--sp-5);
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--sp-2);
-    border-top: 1px solid var(--gray-200);
-  }
-  .modal-close {
-    width: 28px;
-    height: 28px;
-    border: none;
-    background: var(--gray-100);
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 14px;
-    color: var(--gray-500);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal-close:hover { background: var(--gray-200); }
-
-  /* ── Sidebar Preview ── */
-  .sidebar-preview {
-    background: var(--sidebar-bg);
-    border-radius: var(--radius-lg);
-    padding: var(--sp-4);
-    width: 160px;
-  }
-  .sidebar-preview .sp-logo {
-    color: #fff;
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: var(--sp-4);
-    padding-bottom: var(--sp-3);
-    border-bottom: 1px solid rgba(255,255,255,0.12);
-  }
-  .sidebar-preview .sp-logo span { color: #93C5FD; }
-  .sidebar-preview .sp-item {
-    padding: 6px 8px;
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    color: var(--sidebar-sub);
-    cursor: pointer;
-    margin-bottom: 2px;
-    border-left: 3px solid transparent;
-  }
-  .sidebar-preview .sp-item.active {
-    background: var(--sidebar-active);
-    color: #fff;
-    border-left-color: #60A5FA;
-    font-weight: 600;
-  }
-  .sidebar-preview .sp-item:hover:not(.active) {
-    color: #fff;
-    background: rgba(255,255,255,0.06);
-  }
-  .sidebar-preview .sp-section {
-    font-size: 9px;
-    color: rgba(255,255,255,0.3);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 8px 8px 3px;
-    font-weight: 600;
-  }
-
-  /* ── Topbar Preview ── */
-  .topbar-preview {
-    background: #fff;
-    border-bottom: 1px solid var(--gray-200);
-    padding: 0 var(--sp-5);
-    height: var(--topbar-height);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  }
-  .topbar-left {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-  }
-  .topbar-brand {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .topbar-brand .logo {
-    background: var(--primary);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 800;
-    padding: 4px 8px;
-    border-radius: 4px;
-    letter-spacing: -0.5px;
-  }
-  .topbar-brand .subtitle {
-    font-size: 9px;
-    color: var(--gray-400);
-    line-height: 1.3;
-  }
-  .topbar-right {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-    font-size: 12px;
-    color: var(--gray-600);
-  }
-
-  /* ── Page Title ── */
-  .page-title-demo {
-    font-size: var(--text-page-title);
-    font-weight: 700;
-    color: var(--gray-900);
-    margin-bottom: var(--sp-5);
-  }
-
-  /* ── Token Table ── */
-  .token-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-  }
-  .token-table th {
-    text-align: left;
-    padding: 8px 12px;
-    background: var(--gray-100);
-    color: var(--gray-600);
-    font-weight: 600;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  .token-table td {
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--gray-100);
-    vertical-align: middle;
-  }
-  .token-table tr:last-child td { border-bottom: none; }
-  .token-name {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--primary);
-    background: var(--primary-light);
-    padding: 2px 6px;
-    border-radius: 3px;
-  }
-  .token-value {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--gray-600);
-  }
-  .color-dot {
-    width: 14px;
-    height: 14px;
-    border-radius: 3px;
-    display: inline-block;
-    vertical-align: middle;
-    margin-right: 6px;
-    border: 1px solid rgba(0,0,0,0.06);
-  }
-
-  /* ── Scroll hint ── */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
-
-  /* ── Hero Banner ── */
-  .ds-hero {
-    background: linear-gradient(135deg, var(--sidebar-bg) 0%, var(--primary) 100%);
-    border-radius: var(--radius-lg);
-    padding: var(--sp-8) var(--sp-10);
-    color: #fff;
-    margin-bottom: var(--sp-10);
-    position: relative;
-    overflow: hidden;
-  }
-  .ds-hero::after {
-    content: '';
-    position: absolute;
-    right: -40px;
-    top: -40px;
-    width: 240px;
-    height: 240px;
-    background: rgba(255,255,255,0.04);
-    border-radius: 50%;
-  }
-  .ds-hero::before {
-    content: '';
-    position: absolute;
-    right: 60px;
-    bottom: -60px;
-    width: 160px;
-    height: 160px;
-    background: rgba(255,255,255,0.04);
-    border-radius: 50%;
-  }
-  .ds-hero h1 {
-    font-size: 28px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    margin-bottom: 8px;
-  }
-  .ds-hero h1 span { color: #93C5FD; }
-  .ds-hero p { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.7; max-width: 600px; }
-  .ds-hero-meta {
-    display: flex;
-    gap: var(--sp-4);
-    margin-top: var(--sp-5);
-  }
-  .ds-hero-meta-item {
-    background: rgba(255,255,255,0.1);
-    padding: 6px 14px;
-    border-radius: var(--radius-pill);
-    font-size: 12px;
-    font-weight: 500;
-  }
-  .ds-hero-meta-item strong { color: #93C5FD; }
-
-  /* ── Typography Demo ── */
-  .typo-item {
-    display: flex;
-    align-items: baseline;
-    gap: var(--sp-4);
-    padding: var(--sp-3) 0;
-    border-bottom: 1px solid var(--gray-100);
-  }
-  .typo-item:last-child { border-bottom: none; }
-  .typo-meta {
-    min-width: 120px;
-  }
-  .typo-meta .size { font-family: var(--font-mono); font-size: 11px; color: var(--primary); }
-  .typo-meta .role { font-size: 10px; color: var(--gray-400); margin-top: 2px; }
-
-  /* ── Grid Demo ── */
-  .grid-demo {
-    display: flex;
-    gap: var(--sp-3);
-    align-items: flex-start;
-  }
-  .grid-demo .sidebar-preview {
-    flex-shrink: 0;
-  }
-  .grid-demo .content-area {
-    flex: 1;
-    background: var(--gray-50);
-    border-radius: var(--radius-md);
-    border: 1px dashed var(--gray-300);
-    padding: var(--sp-4);
-    font-size: 12px;
-    color: var(--gray-400);
-    text-align: center;
-    min-height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* ── Notification / Update Banner ── */
-  .update-banner {
-    background: linear-gradient(90deg, #FFF7ED, #FFFBEB);
-    border: 1px solid #FDE68A;
-    border-radius: var(--radius-md);
-    padding: var(--sp-3) var(--sp-4);
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-    font-size: 13px;
-  }
-  .update-banner .icon { font-size: 16px; }
-  .update-banner .text strong { color: var(--warning); }
-  .update-banner .date { margin-left: auto; font-size: 11px; color: var(--gray-400); }
-
-  /* ── Attendance Status Row ── */
-  .attendance-row {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-    padding: var(--sp-3) var(--sp-4);
-    background: #fff;
-    border-bottom: 1px solid var(--gray-100);
-  }
-  .attendance-row .avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--gray-200);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    color: var(--gray-500);
-    flex-shrink: 0;
-  }
-  .attendance-row .name {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--gray-800);
-  }
-  .attendance-row .dept {
-    font-size: 11px;
-    color: var(--gray-400);
-  }
-  .attendance-row .spacer { flex: 1; }
-  .attendance-row .chevron {
-    width: 24px;
-    height: 24px;
-    background: var(--primary);
-    border-radius: 50%;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-  }
+/* Dark cinematic concept override */
+:root{--dynamic-ui:#ffffff;--dynamic-muted:rgba(255,255,255,.78);--dynamic-soft:rgba(255,255,255,.45);--dynamic-line:rgba(255,255,255,.42);--dynamic-card:rgba(10,10,10,.48);--dynamic-card-border:rgba(255,255,255,.14);--dynamic-grid:rgba(255,255,255,.055);}
+.ui-layer{background:radial-gradient(circle at 51% 48%,rgba(255,255,255,.08),transparent 42%),rgba(0,0,0,var(--ending-overlay));}
+.ui-layer::before{inset:0!important;border:1px solid rgba(255,255,255,.18)!important;background:linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(180deg,rgba(255,255,255,.045) 1px,transparent 1px)!important;background-size:132px 100%,100% 92px!important;opacity:.58;}
+.ui-layer::after{display:none!important;}
+.hero-brand{top:10.5%!important;left:4.6%!important;transform:none!important;text-align:left!important;color:#fff!important;z-index:22!important;pointer-events:none!important;}
+.hero-brand-sub{font-size:clamp(12px,1.25vw,18px)!important;letter-spacing:.30em!important;color:#fff!important;margin-bottom:14px!important;opacity:.86!important;}
+.hero-brand-main{font-size:clamp(118px,17vw,260px)!important;line-height:.78!important;letter-spacing:-.065em!important;color:#fff!important;text-shadow:0 2px 0 rgba(255,255,255,.06),0 24px 80px rgba(0,0,0,.68)!important;}
+.hero-brand-main::after{font-size:clamp(14px,1.6vw,26px)!important;margin-left:8px!important;}
+.hero-tagline{left:4.6%!important;bottom:22%!important;text-align:left!important;color:#fff!important;white-space:normal!important;}
+.tagline-main{font-size:30px!important;font-weight:500!important;letter-spacing:-.055em!important;color:#fff!important;margin-bottom:28px!important;max-width:420px;}
+.tagline-sub{font-size:16px!important;line-height:1.72!important;color:rgba(255,255,255,.76)!important;max-width:370px!important;}
+.scroll-hint{color:rgba(255,255,255,.72)!important;}.scroll-line{background:#fff!important;width:52px!important;height:1px!important;}
+.cinema-timeline{position:absolute;left:31.5%;top:22%;height:55%;width:130px;opacity:0;transition:opacity .5s;}.cinema-timeline.visible{opacity:.94}.tl-line{position:absolute;left:8px;top:0;bottom:0;width:1px;background:rgba(255,255,255,.34)}.tl-step{position:relative;margin:0 0 52px 24px;color:rgba(255,255,255,.42);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em}.tl-step::before{content:'';position:absolute;left:-20px;top:2px;width:8px;height:8px;border:1px solid rgba(255,255,255,.65);border-radius:50%;background:#050505}.tl-step span{display:block;font-size:12px;margin-bottom:3px}.tl-step b{font-size:10px;font-weight:700}.tl-step.on{color:#fff}.tl-step.on::before{background:#fff;box-shadow:0 0 18px rgba(255,255,255,.72)}
+.philosophy{left:72%!important;top:48%!important;transform:translate(-50%,-50%)!important;text-align:left!important;width:min(390px,28vw)!important;}.phil-body{font-size:clamp(30px,3.1vw,48px)!important;line-height:1.55!important;font-weight:750!important;letter-spacing:-.065em!important;color:#fff!important;text-shadow:0 14px 56px rgba(0,0,0,.7)!important;}.spec-card{background:rgba(8,8,8,.58)!important;box-shadow:none!important;}.ending-logo{width:min(980px,86vw)!important;text-align:center!important;color:#fff!important}.ending-logo-sub{font-family:'IBM Plex Mono',monospace;font-size:clamp(12px,1.55vw,24px);font-weight:600;letter-spacing:.28em;color:#fff;margin-bottom:22px;white-space:nowrap}.ending-logo-main{font-family:'Archivo Black','Pretendard',sans-serif;font-size:clamp(72px,12vw,178px);font-weight:900;letter-spacing:-.065em;line-height:.78;color:#fff;text-shadow:0 0 34px rgba(255,255,255,.14),0 20px 80px rgba(0,0,0,.9)}.ending-logo-main::after{content:'®';font-family:'IBM Plex Mono',monospace;font-size:clamp(12px,1.5vw,24px);vertical-align:top;margin-left:6px}.ending-logo-copy{font-family:'Pretendard',sans-serif;font-size:clamp(15px,1.65vw,26px);font-weight:600;letter-spacing:-.035em;color:#fff;margin-top:26px;white-space:nowrap}@media(max-width:900px){.cinema-timeline{display:none}.philosophy{left:50%!important;width:80vw!important;text-align:center!important}.hero-brand-main{font-size:48px!important}.tagline-main{font-size:24px!important}}
 
 </style>
 </head>
 <body>
+<div id="canvas-container"><canvas id="c"></canvas></div>
+<div class="scroll-driver" id="sd"></div>
 
-<div class="ds-shell">
+<div class="ui-layer">
 
-  <!-- ── Navigation ── -->
-  <nav class="ds-nav">
-    <div class="ds-nav-logo">
-      <div class="brand">y-<span>BE</span></div>
-      <div class="tagline">근태관리의 Begin부터 End까지</div>
+  <!-- HERO -->
+  <div class="hero-brand" id="heroBrand">
+    <div class="hero-brand-sub">THE UNOFFICIAL MECHANICAL BUILDER'S GUIDE</div>
+    <div class="hero-brand-main">HELIXBEAM</div>
+  </div>
+  <div class="hero-tagline" id="heroTagline">
+    <div class="tagline-main">직접 만든 것은 다르게 쓰인다.</div>
+    <div class="tagline-sub">헤릭스빔은<br>일상 제품을 직접 조립하고<br>확장 가능한 구조로 설계하는 브랜드입니다</div>
+    <div class="scroll-hint">SCROLL</div>
+    <div class="scroll-line"></div>
+  </div>
+
+  <!-- CINEMATIC TIMELINE -->
+  <div class="cinema-timeline" id="cinemaTimeline">
+    <div class="tl-line"></div>
+    <div class="tl-step"><span>00</span><b>INTRO</b></div>
+    <div class="tl-step"><span>01</span><b>GENERATE</b></div>
+    <div class="tl-step"><span>02</span><b>UNDERSTAND</b></div>
+    <div class="tl-step on"><span>03</span><b>ASSEMBLE</b></div>
+    <div class="tl-step"><span>04</span><b>COMPLETE</b></div>
+  </div>
+
+  <!-- PHASE LABEL -->
+  <div class="phase-label" id="phaseAssembled">
+    <div class="phase-title">완성품</div>
+    <div class="phase-desc">기계식 연필깎이 — Pencil Sharpener M01</div>
+  </div>
+  <div class="phase-label" id="phaseExplode">
+    <div class="phase-title">분해</div>
+    <div class="phase-desc">각 기계요소가 제 기능을 수행한다</div>
+  </div>
+  <div class="phase-label" id="phaseReassemble">
+    <div class="phase-title">재조립</div>
+    <div class="phase-desc">손이 먼저 이해한다</div>
+  </div>
+
+  <!-- PART LABELS -->
+  <div class="part-label" id="lbl-base" style="left:12%;top:64%;">
+    <div class="part-label-line" style="width:72px;"></div>
+    <div class="part-label-name">Bell Base</div>
+    <div class="part-label-desc">주철 종형 베이스<br>무게중심 / 진동 흡수</div>
+  </div>
+  <div class="part-label lbl-right" id="lbl-body" style="right:12%;top:39%;">
+    <div class="part-label-line" style="width:72px;"></div>
+    <div class="part-label-name">Cylinder Body</div>
+    <div class="part-label-desc">기어박스 하우징<br>내부 기어 트레인 보호</div>
+  </div>
+  <div class="part-label" id="lbl-plate" style="left:12%;top:37%;">
+    <div class="part-label-line" style="width:72px;"></div>
+    <div class="part-label-name">Front Plate</div>
+    <div class="part-label-desc">원형 디스크<br>연필 투입구 + 나사 3개</div>
+  </div>
+  <div class="part-label lbl-right" id="lbl-gear" style="right:12%;top:54%;">
+    <div class="part-label-line" style="width:72px;"></div>
+    <div class="part-label-name">Gear Train</div>
+    <div class="part-label-desc">감속 기어 시스템<br>토크 증폭 → 블레이드 구동</div>
+  </div>
+  <div class="part-label lbl-right" id="lbl-crank" style="right:12%;top:27%;">
+    <div class="part-label-line" style="width:72px;"></div>
+    <div class="part-label-name">Crank Arm</div>
+    <div class="part-label-desc">금속 암 + 목재 손잡이<br>회전력 입력</div>
+  </div>
+  <div class="part-label" id="lbl-clamp" style="left:12%;top:17%;">
+    <div class="part-label-line" style="width:72px;"></div>
+    <div class="part-label-name">T-Clamp × 2</div>
+    <div class="part-label-desc">상단 고정 장치<br>테이블 엣지 체결</div>
+  </div>
+  <div class="part-label" id="lbl-blade" style="left:12%;top:51%;">
+    <div class="part-label-line" style="width:72px;"></div>
+    <div class="part-label-name">Blade Holder</div>
+    <div class="part-label-desc">캠 연동 블레이드<br>연필 직경 자동 대응</div>
+  </div>
+  <div class="part-label lbl-right" id="lbl-screw" style="right:12%;top:69%;">
+    <div class="part-label-line" style="width:72px;"></div>
+    <div class="part-label-name">Screw × 3</div>
+    <div class="part-label-desc">전면 플레이트 체결<br>체결력을 만든다</div>
+  </div>
+
+  <!-- STAGE -->
+  <div class="stage-indicator" id="stageM" style="color:#111;">
+    <div class="stage-letter">M</div>
+    <div class="stage-name" style="color:#111;">Mechanical</div>
+    <div class="stage-kr" style="color:#333;">기계요소가 제 기능을<br>온전히 수행하는 것</div>
+  </div>
+
+  <!-- SPEC CARD -->
+  <div class="spec-card" id="specCard">
+    <div class="spec-card-title">Pencil Sharpener — M01</div>
+    <div class="spec-row"><span class="spec-key">GEAR RATIO</span><span class="spec-val">4 : 1</span></div>
+    <div class="spec-row"><span class="spec-key">BLADE ANGLE</span><span class="spec-val">22.5°</span></div>
+    <div class="spec-row"><span class="spec-key">BASE WEIGHT</span><span class="spec-val">680 g</span></div>
+    <div class="spec-row"><span class="spec-key">TORQUE</span><span class="spec-val">0.45 N·m</span></div>
+    <div class="spec-row"><span class="spec-key">MATERIAL</span><span class="spec-val">Cast Iron / Steel</span></div>
+    <div class="spec-row"><span class="spec-key">STAGE</span><span class="spec-val" style="color:#E84A2A;">M — Mechanical</span></div>
+  </div>
+
+  <!-- MVQ -->
+  <div class="mvq-nav" id="mvqNav">
+    <div class="mvq-item" id="mvqM" style="--c:#8A8880;">
+      <div class="mvq-dot"></div><div class="mvq-text">M — Mechanical</div>
     </div>
-
-    <div class="ds-nav-section">Foundation</div>
-    <a href="#colors" class="active">색상 시스템</a>
-    <a href="#typography">타이포그래피</a>
-    <a href="#spacing">스페이싱 / 레이아웃</a>
-    <a href="#elevation">엘리베이션 / 그림자</a>
-
-    <div class="ds-nav-section">Components</div>
-    <a href="#buttons">버튼</a>
-    <a href="#badges">배지 / 칩</a>
-    <a href="#forms">폼 요소</a>
-    <a href="#tables">테이블</a>
-    <a href="#cards">카드 / 통계</a>
-    <a href="#modals">모달</a>
-
-    <div class="ds-nav-section">Patterns</div>
-    <a href="#layout">레이아웃 구조</a>
-    <a href="#topbar">상단바</a>
-    <a href="#sidebar">사이드바</a>
-    <a href="#attendance">근태 패턴</a>
-    <a href="#leave">휴가 관리 패턴</a>
-
-    <div class="ds-nav-section">Tokens</div>
-    <a href="#tokens">CSS 변수 토큰</a>
-  </nav>
-
-  <!-- ── Main Content ── -->
-  <main class="ds-main">
-
-    <!-- Hero -->
-    <div class="ds-hero">
-      <h1>y-<span>BE</span> Design System</h1>
-      <p>B2B HR/근태관리 SaaS 관리자 페이지의 공식 디자인 시스템입니다. 컴포넌트, 색상, 타이포그래피, 패턴에 대한 단일 소스 오브 트루스(Single Source of Truth)를 제공합니다.</p>
-      <div class="ds-hero-meta">
-        <div class="ds-hero-meta-item"><strong>v2.0</strong> 2026</div>
-        <div class="ds-hero-meta-item">Primary <strong>#1E52CC</strong></div>
-        <div class="ds-hero-meta-item">Sidebar <strong>#2D3A8C</strong></div>
-        <div class="ds-hero-meta-item">Font <strong>Noto Sans KR</strong></div>
-      </div>
+    <div class="mvq-item" id="mvqV" style="--c:#4A8A6A;">
+      <div class="mvq-dot"></div><div class="mvq-text">V — Vision</div>
     </div>
+    <div class="mvq-item" id="mvqQ" style="--c:#4A7AAA;">
+      <div class="mvq-dot"></div><div class="mvq-text">Q — QDD</div>
+    </div>
+  </div>
 
+  <!-- PHILOSOPHY -->
+  <div class="philosophy" id="philosophy">
+    <div class="phil-body">
+      일상의 모든 제품은<br>
+      이해되고<br>
+      직접 만들어지면서<br>
+      진화한다
+    </div>
+  </div>
 
-    <!-- ════ 색상 ════ -->
-    <section class="ds-section" id="colors">
-      <h2 class="ds-section-title">색상 시스템 <span class="badge">Colors</span></h2>
-      <p class="ds-desc">y-BE의 브랜드 컬러 팔레트. 모든 색상은 CSS 변수로 관리되며, 직접 HEX 사용을 지양합니다.</p>
+  <div class="ending-logo" id="endingLogo">
+    <div class="ending-logo-sub">THE UNOFFICIAL MECHANICAL BUILDER’S GUIDE</div>
+    <div class="ending-logo-main">HELIXBEAM</div>
+    <div class="ending-logo-copy">일상의 모든 제품은 이해되고 직접 만들어지면서 진화한다</div>
+  </div>
 
-      <div class="ds-subsection-title">Brand / Primary</div>
-      <div class="preview-box">
-        <div class="swatch-grid">
-          <div class="swatch">
-            <div class="swatch-color" style="background:#1E52CC"></div>
-            <div class="swatch-info"><div class="swatch-name">Primary</div><div class="swatch-hex">#1E52CC</div></div>
-          </div>
-          <div class="swatch">
-            <div class="swatch-color" style="background:#1743A8"></div>
-            <div class="swatch-info"><div class="swatch-name">Primary Hover</div><div class="swatch-hex">#1743A8</div></div>
-          </div>
-          <div class="swatch">
-            <div class="swatch-color" style="background:#EBF0FB"></div>
-            <div class="swatch-info"><div class="swatch-name">Primary Light</div><div class="swatch-hex">#EBF0FB</div></div>
-          </div>
-          <div class="swatch">
-            <div class="swatch-color" style="background:#F8F9FF"></div>
-            <div class="swatch-info"><div class="swatch-name">Primary BG</div><div class="swatch-hex">#F8F9FF</div></div>
-          </div>
-          <div class="swatch">
-            <div class="swatch-color" style="background:#2D3A8C"></div>
-            <div class="swatch-info"><div class="swatch-name">Sidebar / Header</div><div class="swatch-hex">#2D3A8C</div></div>
-          </div>
-          <div class="swatch">
-            <div class="swatch-color" style="background:#1E3A8A"></div>
-            <div class="swatch-info"><div class="swatch-name">Sidebar Active</div><div class="swatch-hex">#1E3A8A</div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="ds-subsection-title">Semantic</div>
-      <div class="preview-box">
-        <div class="swatch-grid">
-          <div class="swatch">
-            <div class="swatch-color" style="background:#DC2626"></div>
-            <div class="swatch-info"><div class="swatch-name">Danger</div><div class="swatch-hex">#DC2626</div></div>
-          </div>
-          <div class="swatch">
-            <div class="swatch-color" style="background:#FEE2E2"></div>
-            <div class="swatch-info"><div class="swatch-name">Danger Light</div><div class="swatch-hex">#FEE2E2</div></div>
-          </div>
-          <div class="swatch">
-            <div class="swatch-color" style="background:#16A34A"></div>
-            <div class="swatch-info"><div class="swatch-name">Success</div><div class="swatch-hex">#16A34A</div></div>
-          </div>
-          <div class="swatch">
-            <div class="swatch-color" style="background:#DCFCE7"></div>
-            <div class="swatch-info"><div class="swatch-name">Success Light</div><div class="swatch-hex">#DCFCE7</div></div>
-          </div>
-          <div class="swatch">
-            <div class="swatch-color" style="background:#D97706"></div>
-            <div class="swatch-info"><div class="swatch-name">Warning</div><div class="swatch-hex">#D97706</div></div>
-          </div>
-          <div class="swatch">
-            <div class="swatch-color" style="background:#FEF3C7"></div>
-            <div class="swatch-info"><div class="swatch-name">Warning Light</div><div class="swatch-hex">#FEF3C7</div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="ds-subsection-title">Work Type (출근/퇴근 칩)</div>
-      <div class="preview-box">
-        <div class="swatch-grid">
-          <div class="swatch">
-            <div class="swatch-color" style="background:#EDE9FE"></div>
-            <div class="swatch-info"><div class="swatch-name">Clock-in BG</div><div class="swatch-hex">#EDE9FE</div></div>
-          </div>
-          <div class="swatch">
-            <div class="swatch-color" style="background:#7C3AED"></div>
-            <div class="swatch-info"><div class="swatch-name">Clock-in Text</div><div class="swatch-hex">#7C3AED</div></div>
-          </div>
-          <div class="swatch">
-            <div class="swatch-color" style="background:#FCE7F3"></div>
-            <div class="swatch-info"><div class="swatch-name">Clock-out BG</div><div class="swatch-hex">#FCE7F3</div></div>
-          </div>
-          <div class="swatch">
-            <div class="swatch-color" style="background:#BE185D"></div>
-            <div class="swatch-info"><div class="swatch-name">Clock-out Text</div><div class="swatch-hex">#BE185D</div></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-
-    <!-- ════ 타이포그래피 ════ -->
-    <section class="ds-section" id="typography">
-      <h2 class="ds-section-title">타이포그래피 <span class="badge">Typography</span></h2>
-      <p class="ds-desc">기본 폰트는 <strong>Noto Sans KR</strong>이며, 코드 및 토큰 표기에는 <strong>JetBrains Mono</strong>를 사용합니다.</p>
-
-      <div class="preview-box">
-        <div class="typo-item">
-          <div class="typo-meta"><div class="size">20px / 700</div><div class="role">Page Title</div></div>
-          <div style="font-size:20px;font-weight:700;color:var(--gray-900)">근태 현황</div>
-        </div>
-        <div class="typo-item">
-          <div class="typo-meta"><div class="size">16px / 600</div><div class="role">Section Title</div></div>
-          <div style="font-size:16px;font-weight:600;color:var(--gray-800)">휴가 형태 관리</div>
-        </div>
-        <div class="typo-item">
-          <div class="typo-meta"><div class="size">13px / 400</div><div class="role">Body</div></div>
-          <div style="font-size:13px;color:var(--gray-700)">사용자가 해당 휴가 형태를 선택한 뒤 휴가를 신청합니다.</div>
-        </div>
-        <div class="typo-item">
-          <div class="typo-meta"><div class="size">13px / 500</div><div class="role">Body Medium</div></div>
-          <div style="font-size:13px;font-weight:500;color:var(--gray-700)">2026년 4월 6일(월)부터 이용하실 수 있습니다.</div>
-        </div>
-        <div class="typo-item">
-          <div class="typo-meta"><div class="size">11px / 400</div><div class="role">Caption</div></div>
-          <div style="font-size:11px;color:var(--gray-500)">본 기능은 부가서비스(유료)로 제공됩니다.</div>
-        </div>
-        <div class="typo-item">
-          <div class="typo-meta"><div class="size">24px / 700</div><div class="role">Stat Number</div></div>
-          <div style="font-size:24px;font-weight:700;color:var(--gray-900)">31</div>
-        </div>
-      </div>
-    </section>
-
-
-    <!-- ════ 스페이싱 ════ -->
-    <section class="ds-section" id="spacing">
-      <h2 class="ds-section-title">스페이싱 / 레이아웃 <span class="badge">Spacing</span></h2>
-      <p class="ds-desc">4px 기반 스페이싱 스케일. 사이드바 너비 130px, 상단바 높이 52px.</p>
-
-      <div class="preview-box">
-        <table class="token-table">
-          <thead>
-            <tr><th>토큰</th><th>값</th><th>시각화</th><th>용도</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><span class="token-name">--sp-1</span></td><td class="token-value">4px</td><td><div style="height:8px;width:4px;background:var(--primary);border-radius:2px"></div></td><td style="font-size:11px;color:var(--gray-500)">아이콘 간격, 마이크로 갭</td></tr>
-            <tr><td><span class="token-name">--sp-2</span></td><td class="token-value">8px</td><td><div style="height:8px;width:8px;background:var(--primary);border-radius:2px"></div></td><td style="font-size:11px;color:var(--gray-500)">배지 내부 패딩</td></tr>
-            <tr><td><span class="token-name">--sp-3</span></td><td class="token-value">12px</td><td><div style="height:8px;width:12px;background:var(--primary);border-radius:2px"></div></td><td style="font-size:11px;color:var(--gray-500)">버튼 간격, 카드 내부</td></tr>
-            <tr><td><span class="token-name">--sp-4</span></td><td class="token-value">16px</td><td><div style="height:8px;width:16px;background:var(--primary);border-radius:2px"></div></td><td style="font-size:11px;color:var(--gray-500)">섹션 내부 패딩</td></tr>
-            <tr><td><span class="token-name">--sp-5</span></td><td class="token-value">20px</td><td><div style="height:8px;width:20px;background:var(--primary);border-radius:2px"></div></td><td style="font-size:11px;color:var(--gray-500)">페이지 패딩, 카드 패딩</td></tr>
-            <tr><td><span class="token-name">--sp-6</span></td><td class="token-value">24px</td><td><div style="height:8px;width:24px;background:var(--primary);border-radius:2px"></div></td><td style="font-size:11px;color:var(--gray-500)">섹션 간 여백</td></tr>
-            <tr><td><span class="token-name">--sp-8</span></td><td class="token-value">32px</td><td><div style="height:8px;width:32px;background:var(--primary);border-radius:2px"></div></td><td style="font-size:11px;color:var(--gray-500)">페이지 콘텐츠 상단 여백</td></tr>
-            <tr><td><span class="token-name">--sp-10</span></td><td class="token-value">40px</td><td><div style="height:8px;width:40px;background:var(--primary);border-radius:2px"></div></td><td style="font-size:11px;color:var(--gray-500)">섹션 간 최대 여백</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="preview-box">
-        <table class="token-table">
-          <thead><tr><th>토큰</th><th>값</th><th>용도</th></tr></thead>
-          <tbody>
-            <tr><td><span class="token-name">--sidebar-width</span></td><td class="token-value">130px</td><td style="font-size:11px;color:var(--gray-500)">좌측 내비게이션 고정 너비</td></tr>
-            <tr><td><span class="token-name">--topbar-height</span></td><td class="token-value">52px</td><td style="font-size:11px;color:var(--gray-500)">상단바 높이</td></tr>
-            <tr><td><span class="token-name">--input-height</span></td><td class="token-value">34px</td><td style="font-size:11px;color:var(--gray-500)">기본 폼 입력 필드 높이</td></tr>
-            <tr><td><span class="token-name">--btn-height</span></td><td class="token-value">34px</td><td style="font-size:11px;color:var(--gray-500)">기본 버튼 높이</td></tr>
-            <tr><td><span class="token-name">--btn-height-sm</span></td><td class="token-value">28px</td><td style="font-size:11px;color:var(--gray-500)">소형 버튼 (테이블 내 액션)</td></tr>
-            <tr><td><span class="token-name">--radius-sm</span></td><td class="token-value">4px</td><td style="font-size:11px;color:var(--gray-500)">칩, 테이블 헤더</td></tr>
-            <tr><td><span class="token-name">--radius-md</span></td><td class="token-value">6px</td><td style="font-size:11px;color:var(--gray-500)">버튼, 인풋, 모달</td></tr>
-            <tr><td><span class="token-name">--radius-lg</span></td><td class="token-value">8px</td><td style="font-size:11px;color:var(--gray-500)">카드, 테이블 래퍼</td></tr>
-            <tr><td><span class="token-name">--radius-pill</span></td><td class="token-value">999px</td><td style="font-size:11px;color:var(--gray-500)">배지, 상태 태그</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-
-    <!-- ════ 버튼 ════ -->
-    <section class="ds-section" id="buttons">
-      <h2 class="ds-section-title">버튼 <span class="badge">Buttons</span></h2>
-      <p class="ds-desc">4가지 버튼 타입. 기본(34px) / 소형(28px) 두 가지 사이즈.</p>
-
-      <div class="ds-subsection-title">Button Variants — Default (34px)</div>
-      <div class="preview-box flex">
-        <button class="btn btn-primary">✓ 신규 등록</button>
-        <button class="btn btn-secondary">🔍 검색</button>
-        <button class="btn btn-danger">✕ 삭제</button>
-        <button class="btn btn-ghost">취소</button>
-        <button class="btn btn-primary"><span>📋</span> 메뉴얼 바로가기</button>
-      </div>
-
-      <div class="ds-subsection-title">Button Variants — Small (28px)</div>
-      <div class="preview-box flex">
-        <button class="btn btn-primary btn-sm">✏ 수정</button>
-        <button class="btn btn-danger btn-sm">✕ 삭제</button>
-        <button class="btn btn-secondary btn-sm">📄 상세</button>
-        <button class="btn btn-ghost btn-sm">취소</button>
-      </div>
-
-      <div class="ds-subsection-title">Icon Button</div>
-      <div class="preview-box flex">
-        <button class="btn-icon">🔍</button>
-        <button class="btn-icon" style="background:var(--gray-200);color:var(--gray-600)">+</button>
-        <button class="btn-icon" style="background:var(--danger)">✕</button>
-      </div>
-
-      <div class="code-block"><span class="cm">/* Primary */</span>
-.btn-primary { background: <span class="cv">var(--primary)</span>; color: #fff; height: <span class="cv">var(--btn-height)</span>; }
-
-<span class="cm">/* Small modifier */</span>
-.btn-sm { height: <span class="cv">var(--btn-height-sm)</span>; padding: 0 12px; font-size: 12px; }
-
-<span class="cm">/* Usage pattern in tables */</span>
-<span class="cs">&lt;button class="btn btn-primary btn-sm"&gt;✏ 수정&lt;/button&gt;</span>
-<span class="cs">&lt;button class="btn btn-danger btn-sm"&gt;✕ 삭제&lt;/button&gt;</span></div>
-    </section>
-
-
-    <!-- ════ 배지 / 칩 ════ -->
-    <section class="ds-section" id="badges">
-      <h2 class="ds-section-title">배지 / 칩 <span class="badge">Badges & Chips</span></h2>
-      <p class="ds-desc">5가지 배지 색상(pill 형태), 4가지 근무 유형 칩(square rx:4px), 근태 상태 배지.</p>
-
-      <div class="ds-subsection-title">Status Badges (Pill)</div>
-      <div class="preview-box flex">
-        <span class="badge-pill badge-blue">재택</span>
-        <span class="badge-pill badge-gray">파견</span>
-        <span class="badge-pill badge-red">미출근</span>
-        <span class="badge-pill badge-yellow">지각</span>
-        <span class="badge-pill badge-green">정상</span>
-        <span class="badge-pill badge-purple">외근</span>
-        <span class="badge-pill badge-update">Update</span>
-      </div>
-
-      <div class="ds-subsection-title">Work Type Chips (Square, rx:4px)</div>
-      <div class="preview-box flex">
-        <span class="chip chip-clockin">🕐 출근</span>
-        <span class="chip chip-clockout">🕐 퇴근</span>
-        <span class="chip chip-basic">기본 근무</span>
-        <span class="chip chip-shift">사차 근무</span>
-      </div>
-
-      <div class="ds-subsection-title">Attendance Status (근태 상태)</div>
-      <div class="preview-box flex">
-        <span class="status-badge status-absent"><span class="status-dot"></span>미출근</span>
-        <span class="status-badge status-present"><span class="status-dot"></span>출근중</span>
-        <span class="status-badge status-late"><span class="status-dot"></span>지각</span>
-        <span class="status-badge status-leave"><span class="status-dot"></span>휴가</span>
-      </div>
-
-      <div class="code-block"><span class="cm">/* Badge — Pill (border-radius: 999px) */</span>
-.badge-pill { padding: 3px 10px; border-radius: <span class="cv">var(--radius-pill)</span>; font-size: 11px; font-weight: 600; }
-.badge-blue   { background: #DBEAFE; color: #1D4ED8; }
-.badge-red    { background: <span class="cv">var(--danger-light)</span>; color: <span class="cv">var(--danger)</span>; }
-
-<span class="cm">/* Chip — Square (border-radius: 4px) */</span>
-.chip { border-radius: <span class="cv">var(--radius-sm)</span>; padding: 3px 8px; font-size: 11px; }
-.chip-clockin  { background: #EDE9FE; color: #7C3AED; }
-.chip-clockout { background: #FCE7F3; color: #BE185D; }</div>
-    </section>
-
-
-    <!-- ════ 폼 요소 ════ -->
-    <section class="ds-section" id="forms">
-      <h2 class="ds-section-title">폼 요소 <span class="badge">Forms</span></h2>
-      <p class="ds-desc">모든 입력 필드 높이 34px. 포커스 시 primary 색상 아웃라인.</p>
-
-      <div class="preview-box grid-2">
-        <div>
-          <div class="form-group">
-            <label class="form-label">휴가형태명</label>
-            <input class="form-input" type="text" placeholder="휴가형태명을 입력하세요" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">사전등록대상</label>
-            <select class="form-select">
-              <option>대상</option>
-              <option>비대상</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">휴가일수</label>
-            <input class="form-input" type="number" placeholder="일수 입력" />
-          </div>
-        </div>
-        <div>
-          <div class="ds-subsection-title" style="margin-top:0">Search Bar Pattern</div>
-          <div class="search-bar" style="margin-bottom:16px">
-            <div class="search-tab">휴가형태명</div>
-            <input class="search-input" placeholder="검색어 입력" />
-            <button class="search-btn">🔍</button>
-          </div>
-          <div class="ds-subsection-title">Date Picker Pattern</div>
-          <input class="form-input" type="date" value="2026-04-19" />
-        </div>
-      </div>
-
-      <div class="code-block"><span class="cm">/* Input — height 34px, focus ring */</span>
-.form-input {
-  height: <span class="cv">var(--input-height)</span>;     <span class="cm">/* 34px */</span>
-  border: 1px solid <span class="cv">var(--gray-300)</span>;
-  border-radius: <span class="cv">var(--radius-md)</span>;
-}
-.form-input:focus {
-  border-color: <span class="cv">var(--primary)</span>;
-  box-shadow: 0 0 0 3px rgba(30,82,204,0.12);
-}</div>
-    </section>
-
-
-    <!-- ════ 테이블 ════ -->
-    <section class="ds-section" id="tables">
-      <h2 class="ds-section-title">테이블 <span class="badge">Tables</span></h2>
-      <p class="ds-desc">헤더 배경 #2D3A8C / 흰색 텍스트. 행 호버 시 gray-50. 마지막 열 관리 버튼 배치.</p>
-
-      <div class="preview-box" style="padding:0">
-        <div class="table-wrap">
-          <table class="ds-table">
-            <thead>
-              <tr>
-                <th>번호</th>
-                <th>휴가형태명</th>
-                <th>사전등록대상</th>
-                <th>휴가일수</th>
-                <th>주유말 포함</th>
-                <th>등록일</th>
-                <th>관리</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>14</td>
-                <td>3월 반짝 휴가세일</td>
-                <td><span class="badge-pill badge-blue">대상</span></td>
-                <td>10일</td>
-                <td><span class="badge-pill badge-gray">비포함</span></td>
-                <td>2026-03-05</td>
-                <td style="display:flex;gap:6px;justify-content:center">
-                  <button class="btn btn-primary btn-sm">✏ 수정</button>
-                  <button class="btn btn-danger btn-sm">✕ 삭제</button>
-                </td>
-              </tr>
-              <tr>
-                <td>13</td>
-                <td>휴가 기능 테스트(비대상)</td>
-                <td><span class="badge-pill badge-gray">비대상</span></td>
-                <td>0.25일</td>
-                <td><span class="badge-pill badge-gray">비포함</span></td>
-                <td>2026-01-27</td>
-                <td style="display:flex;gap:6px;justify-content:center">
-                  <button class="btn btn-primary btn-sm">✏ 수정</button>
-                  <button class="btn btn-danger btn-sm">✕ 삭제</button>
-                </td>
-              </tr>
-              <tr>
-                <td>12</td>
-                <td>공유 합류 휴가</td>
-                <td><span class="badge-pill badge-blue">대상</span></td>
-                <td>4일</td>
-                <td><span class="badge-pill badge-gray">비포함</span></td>
-                <td>2025-12-24</td>
-                <td style="display:flex;gap:6px;justify-content:center">
-                  <button class="btn btn-primary btn-sm">✏ 수정</button>
-                  <button class="btn btn-danger btn-sm">✕ 삭제</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="code-block"><span class="cm">/* Table header */</span>
-.ds-table th {
-  background: <span class="cv">var(--table-header-bg)</span>;   <span class="cm">/* #2D3A8C */</span>
-  color: <span class="cv">var(--table-header-text)</span>;       <span class="cm">/* #FFFFFF */</span>
-  font-size: 12px; font-weight: 600;
-}
-<span class="cm">/* Row hover */</span>
-.ds-table tr:hover td { background: <span class="cv">var(--gray-50)</span>; }</div>
-    </section>
-
-
-    <!-- ════ 카드 ════ -->
-    <section class="ds-section" id="cards">
-      <h2 class="ds-section-title">카드 / 통계 <span class="badge">Cards</span></h2>
-      <p class="ds-desc">Stat Card 배경 #F8F9FF. 숫자 24px/700. 근태 현황 / 근무 위치 / 비콘 현황 3개 섹션.</p>
-
-      <div class="ds-subsection-title">Stat Cards — 근태 현황</div>
-      <div class="preview-box flex">
-        <div class="stat-card">
-          <div class="label">미출근</div>
-          <div class="value danger">31</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">결근</div>
-          <div class="value">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">지각</div>
-          <div class="value warning">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">이른퇴근</div>
-          <div class="value">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">휴가</div>
-          <div class="value">0</div>
-        </div>
-      </div>
-
-      <div class="ds-subsection-title">Stat Cards — 근무 위치 현황</div>
-      <div class="preview-box flex">
-        <div class="stat-card">
-          <div class="label">근무중</div>
-          <div class="value">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">출장</div>
-          <div class="value">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">재택</div>
-          <div class="value primary">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">파견</div>
-          <div class="value">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">외근</div>
-          <div class="value">0</div>
-        </div>
-      </div>
-
-      <div class="ds-subsection-title">Info Card (안내 배너)</div>
-      <div class="preview-box">
-        <div class="info-card">
-          <p>사용자가 해당 휴가 형태를 선택한 뒤 휴가를 신청합니다.</p>
-          <p>회사에서 제공하는 휴가 형태를 모두 등록해 주세요.</p>
-        </div>
-      </div>
-
-      <div class="ds-subsection-title">Update Banner (기능 업데이트 공지)</div>
-      <div class="preview-box">
-        <div class="update-banner">
-          <span class="icon">📢</span>
-          <div class="text">
-            <strong>전자계약 기능 업데이트 안내</strong> — 계약 양식 총 6종과 더욱 편리해진 문서 편집 기능
-          </div>
-          <div class="date">2026년 4월 6일(월)부터</div>
-        </div>
-      </div>
-    </section>
-
-
-    <!-- ════ 모달 ════ -->
-    <section class="ds-section" id="modals">
-      <h2 class="ds-section-title">모달 <span class="badge">Modals</span></h2>
-      <p class="ds-desc">3-zone 구조: Header / Content / Footer. 헤더에 제목 + 닫기 버튼. 푸터 우측 정렬 액션.</p>
-
-      <div class="preview-box">
-        <div class="modal-demo">
-          <div class="modal-header">
-            <div class="title">
-              기능 업데이트
-              <span class="badge-pill badge-update">Update</span>
-            </div>
-            <button class="modal-close">✕</button>
-          </div>
-          <div class="modal-body">
-            <h3 style="font-size:16px;font-weight:700;color:var(--primary);text-align:center;margin-bottom:12px">전자계약 기능 업데이트 안내</h3>
-            <p style="font-size:13px;color:var(--gray-600);text-align:center;line-height:1.7">
-              인사/노무 관리에 필요한 계약 양식 총 6종과<br>
-              더욱 편리해진 문서 편집 기능을
-              <span style="color:var(--primary);font-weight:600">2026년 4월 6일(월)부터</span> 이용하실 수 있습니다.
-            </p>
-            <div style="margin-top:16px;padding:12px;background:var(--gray-50);border-radius:6px;font-size:11px;color:var(--gray-500);line-height:1.7">
-              본 기능은 부가서비스(유료)로 제공됩니다.<br>
-              무료 사용 기간 동안에는 전자계약 기능을 체험판 형태로 이용하실 수 있습니다.
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-ghost btn-sm">오늘 그만보기</button>
-            <button class="btn btn-ghost btn-sm">7일간 보지 않기</button>
-            <button class="btn btn-primary btn-sm">메뉴얼 바로가기</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="code-block"><span class="cm">/* Modal 3-zone structure */</span>
-<span class="cs">&lt;div class="modal"&gt;</span>
-  <span class="cs">&lt;div class="modal-header"&gt;</span>  <span class="cm">/* title + close btn */</span>
-  <span class="cs">&lt;div class="modal-body"&gt;</span>    <span class="cm">/* content */</span>
-  <span class="cs">&lt;div class="modal-footer"&gt;</span>  <span class="cm">/* right-aligned actions */</span>
-<span class="cs">&lt;/div&gt;</span></div>
-    </section>
-
-
-    <!-- ════ 레이아웃 ════ -->
-    <section class="ds-section" id="layout">
-      <h2 class="ds-section-title">레이아웃 구조 <span class="badge">Layout</span></h2>
-      <p class="ds-desc">전체 레이아웃: 상단바(52px) + 사이드바(130px) + 메인 콘텐츠 영역. CSS Grid 기반.</p>
-
-      <div class="preview-box" style="padding:0;overflow:hidden">
-        <div class="topbar-preview">
-          <div class="topbar-left">
-            <div class="topbar-brand">
-              <div class="logo">y-BE</div>
-              <div class="subtitle">근태관리의 Begin부터 End까지<br>관리자페이지</div>
-            </div>
-          </div>
-          <div class="topbar-right">
-            Y-BE COMPANY (식제금지) | 관리자(ybe)
-            <button class="btn btn-primary btn-sm">🔒 로그아웃</button>
-          </div>
-        </div>
-        <div class="grid-demo" style="padding:16px;background:var(--gray-50)">
-          <div class="sidebar-preview">
-            <div class="sp-logo">y-<span>BE</span></div>
-            <div class="sp-section">근로 시간 현황</div>
-            <div class="sp-item active">근태 현황</div>
-            <div class="sp-item">근태 변경 현황</div>
-            <div class="sp-item">PC 사용 현황</div>
-            <div class="sp-section">연차/휴가 관리</div>
-            <div class="sp-item">연차 기준 관리</div>
-            <div class="sp-item">연차 현황</div>
-            <div class="sp-item">휴가 형태 관리</div>
-          </div>
-          <div class="content-area">
-            <div style="text-align:center">
-              <div style="font-size:11px;color:var(--gray-400);margin-bottom:4px">Main Content Area</div>
-              <div style="font-size:10px;color:var(--gray-300)">calc(100vw - 130px)</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="code-block"><span class="cm">/* Layout grid */</span>
-.layout {
-  display: grid;
-  grid-template-columns: <span class="cv">var(--sidebar-width)</span> 1fr;  <span class="cm">/* 130px + 1fr */</span>
-  grid-template-rows: <span class="cv">var(--topbar-height)</span> 1fr;      <span class="cm">/* 52px + 1fr */</span>
-  min-height: 100vh;
-}
-.topbar  { grid-column: 1 / -1; }
-.sidebar { grid-row: 2; position: sticky; top: 0; height: calc(100vh - 52px); }
-.main    { grid-row: 2; padding: <span class="cv">var(--sp-8)</span> <span class="cv">var(--sp-10)</span>; }</div>
-    </section>
-
-
-    <!-- ════ 근태 패턴 ════ -->
-    <section class="ds-section" id="attendance">
-      <h2 class="ds-section-title">근태 현황 패턴 <span class="badge">Attendance Pattern</span></h2>
-      <p class="ds-desc">근태 현황 페이지의 행 구성: 아바타 + 이름/부서 + 근무유형칩 + 출퇴근 데이터 + 상태 배지 + 드롭다운 chevron.</p>
-
-      <div class="preview-box" style="padding:0;overflow:hidden">
-        <div style="border-radius:8px;overflow:hidden;border:1px solid var(--gray-100)">
-          <div class="attendance-row">
-            <div class="avatar">A조</div>
-            <div>
-              <div class="name">이광호 사원</div>
-              <div class="dept">운영팀_ / B/팀장B</div>
-            </div>
-            <span class="chip chip-basic">기본 근무</span>
-            <div class="spacer"></div>
-            <span style="font-size:11px;color:var(--gray-400)">-</span>
-            <span class="status-badge status-absent"><span class="status-dot"></span>미출근</span>
-            <div class="chevron">▼</div>
-          </div>
-          <div class="attendance-row">
-            <div class="avatar" style="background:#EDE9FE;color:#7C3AED">전</div>
-            <div>
-              <div class="name">전체아 사원</div>
-              <div class="dept">아무도없는부서 > 여기사람두명</div>
-            </div>
-            <span class="chip chip-shift">사차 근무</span>
-            <div class="spacer"></div>
-            <span style="font-size:11px;color:var(--gray-400)">-</span>
-            <span class="status-badge status-absent"><span class="status-dot"></span>미출근</span>
-            <div class="chevron">▼</div>
-          </div>
-          <div class="attendance-row">
-            <div class="avatar" style="background:#DCFCE7;color:#166534">박</div>
-            <div>
-              <div class="name">박테스2 사원_</div>
-              <div class="dept">테스트_</div>
-            </div>
-            <span class="chip chip-basic">기본 근무</span>
-            <div class="spacer"></div>
-            <span style="font-size:11px;color:var(--gray-400)">-</span>
-            <span class="status-badge status-absent"><span class="status-dot"></span>미출근</span>
-            <div class="chevron">▼</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-
-    <!-- ════ CSS 토큰 ════ -->
-    <section class="ds-section" id="tokens">
-      <h2 class="ds-section-title">CSS 변수 토큰 <span class="badge">Design Tokens</span></h2>
-      <p class="ds-desc">모든 값은 <code style="font-family:var(--font-mono);font-size:11px;background:var(--primary-light);color:var(--primary);padding:2px 5px;border-radius:3px">:root</code>에 선언된 CSS 변수로 관리합니다. 직접 HEX/px 값 사용 금지.</p>
-
-      <div class="preview-box" style="padding:0">
-        <table class="token-table">
-          <thead>
-            <tr><th>카테고리</th><th>변수명</th><th>값</th><th>시각</th></tr>
-          </thead>
-          <tbody>
-            <tr><td style="color:var(--gray-500);font-size:11px">Brand</td><td><span class="token-name">--primary</span></td><td class="token-value">#1E52CC</td><td><span class="color-dot" style="background:#1E52CC"></span></td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Brand</td><td><span class="token-name">--primary-hover</span></td><td class="token-value">#1743A8</td><td><span class="color-dot" style="background:#1743A8"></span></td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Brand</td><td><span class="token-name">--primary-light</span></td><td class="token-value">#EBF0FB</td><td><span class="color-dot" style="background:#EBF0FB"></span></td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Brand</td><td><span class="token-name">--primary-bg</span></td><td class="token-value">#F8F9FF</td><td><span class="color-dot" style="background:#F8F9FF"></span></td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Sidebar</td><td><span class="token-name">--sidebar-bg</span></td><td class="token-value">#2D3A8C</td><td><span class="color-dot" style="background:#2D3A8C"></span></td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Sidebar</td><td><span class="token-name">--sidebar-active</span></td><td class="token-value">#1E3A8A</td><td><span class="color-dot" style="background:#1E3A8A"></span></td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Semantic</td><td><span class="token-name">--danger</span></td><td class="token-value">#DC2626</td><td><span class="color-dot" style="background:#DC2626"></span></td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Semantic</td><td><span class="token-name">--success</span></td><td class="token-value">#16A34A</td><td><span class="color-dot" style="background:#16A34A"></span></td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Semantic</td><td><span class="token-name">--warning</span></td><td class="token-value">#D97706</td><td><span class="color-dot" style="background:#D97706"></span></td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Table</td><td><span class="token-name">--table-header-bg</span></td><td class="token-value">#2D3A8C</td><td><span class="color-dot" style="background:#2D3A8C"></span></td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Size</td><td><span class="token-name">--sidebar-width</span></td><td class="token-value">130px</td><td>—</td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Size</td><td><span class="token-name">--topbar-height</span></td><td class="token-value">52px</td><td>—</td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Size</td><td><span class="token-name">--input-height</span></td><td class="token-value">34px</td><td>—</td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Size</td><td><span class="token-name">--btn-height</span></td><td class="token-value">34px</td><td>—</td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Size</td><td><span class="token-name">--btn-height-sm</span></td><td class="token-value">28px</td><td>—</td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Radius</td><td><span class="token-name">--radius-sm</span></td><td class="token-value">4px</td><td>—</td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Radius</td><td><span class="token-name">--radius-md</span></td><td class="token-value">6px</td><td>—</td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Radius</td><td><span class="token-name">--radius-lg</span></td><td class="token-value">8px</td><td>—</td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Radius</td><td><span class="token-name">--radius-pill</span></td><td class="token-value">999px</td><td>—</td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Font</td><td><span class="token-name">--text-page-title</span></td><td class="token-value">20px</td><td>—</td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Font</td><td><span class="token-name">--text-body</span></td><td class="token-value">13px</td><td>—</td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Font</td><td><span class="token-name">--text-caption</span></td><td class="token-value">11px</td><td>—</td></tr>
-            <tr><td style="color:var(--gray-500);font-size:11px">Font</td><td><span class="token-name">--text-stat</span></td><td class="token-value">24px</td><td>—</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-  </main>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-  // Smooth scroll + active nav highlight
-  const navLinks = document.querySelectorAll('.ds-nav a');
-  navLinks.forEach(link => {
-    link.addEventListener('click', e => {
-      navLinks.forEach(l => l.classList.remove('active'));
-      e.currentTarget.classList.add('active');
-    });
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.35;
+renderer.setClearColor(0x050505, 1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42,1,0.1,100);
+camera.position.set(0,2.15,5.25);
+camera.lookAt(0,1.2,0);
+
+function resize(){
+  const w=innerWidth,h=innerHeight;
+  renderer.setSize(w,h);
+  camera.aspect=w/h;
+  camera.updateProjectionMatrix();
+}
+resize();
+addEventListener('resize',resize);
+
+// ── MATERIALS ──
+// Soft white-gray metal system: low contrast, satin/brushed aluminum feel
+function brushedTexture(){
+  const cnv = document.createElement('canvas');
+  cnv.width = 256; cnv.height = 256;
+  const ctx = cnv.getContext('2d');
+  ctx.fillStyle = '#e7e8e4';
+  ctx.fillRect(0,0,256,256);
+  for(let y=0;y<256;y++){
+    const v = 220 + Math.random()*24;
+    ctx.fillStyle = `rgba(${v},${v},${v},0.14)`;
+    ctx.fillRect(0,y,256,1);
+  }
+  const tex = new THREE.CanvasTexture(cnv);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(1.8,1.8);
+  return tex;
+}
+const brushedMap = brushedTexture();
+const matCastIron = new THREE.MeshStandardMaterial({
+  color:0xD9DBD7, roughness:0.68, metalness:0.72,
+  map: brushedMap, envMapIntensity:0.7
+});
+const matSteel = new THREE.MeshStandardMaterial({
+  color:0xE8E9E5, roughness:0.58, metalness:0.86,
+  map: brushedMap, envMapIntensity:0.85
+});
+const matChrome = new THREE.MeshStandardMaterial({
+  color:0xF4F5F2, roughness:0.36, metalness:0.96,
+  envMapIntensity:1.0
+});
+const matWood = new THREE.MeshStandardMaterial({
+  color:0xEEE6C9, roughness:0.50, metalness:0.38,
+  envMapIntensity:0.55
+});
+const matGear = new THREE.MeshStandardMaterial({
+  color:0xD2D5D2, roughness:0.62, metalness:0.78,
+  map: brushedMap, envMapIntensity:0.72
+});
+const matDark = new THREE.MeshStandardMaterial({
+  color:0xAEB3B0, roughness:0.55, metalness:0.82,
+  envMapIntensity:0.65
+});
+const matGearBlue  = new THREE.MeshStandardMaterial({color:0xD5D8D5,roughness:0.64,metalness:0.78,map:brushedMap,envMapIntensity:0.72});
+const matGearGreen = new THREE.MeshStandardMaterial({color:0xCDD1CE,roughness:0.66,metalness:0.76,map:brushedMap,envMapIntensity:0.70});
+const matGearRed   = new THREE.MeshStandardMaterial({color:0xE1E2DE,roughness:0.56,metalness:0.84,map:brushedMap,envMapIntensity:0.80});
+const matAxleYellow= new THREE.MeshStandardMaterial({color:0xEEE8CF,roughness:0.48,metalness:0.46,envMapIntensity:0.55});
+
+function mk(geo,mat){const m=new THREE.Mesh(geo,mat);m.castShadow=true;m.receiveShadow=true;return m;}
+function grp(){return new THREE.Group();}
+
+// ── BUILD PENCIL SHARPENER ──
+const root = grp();
+scene.add(root);
+root.scale.set(1.30, 1.30, 1.30);
+root.rotation.y = -0.58;
+root.rotation.x = 0.035;
+
+// 1. BELL BASE — 종형 주철 베이스
+const gBase = grp();
+// Main bell shape: large cone + cylinder
+const bellBottom = mk(new THREE.CylinderGeometry(1.4,1.6,0.15,48), matCastIron);
+bellBottom.position.y = 0.075;
+const bellBody = mk(new THREE.CylinderGeometry(0.75,1.4,0.9,48), matCastIron);
+bellBody.position.y = 0.65;
+const bellTop = mk(new THREE.CylinderGeometry(0.72,0.75,0.12,48), matCastIron);
+bellTop.position.y = 1.16;
+gBase.add(bellBottom, bellBody, bellTop);
+gBase.position.set(0,0,0);
+root.add(gBase);
+
+// 2. CYLINDER BODY — 원통형 기어박스 하우징
+const gBody = grp();
+const bodyMain = mk(new THREE.CylinderGeometry(0.68,0.68,1.4,48), matCastIron);
+bodyMain.rotation.x = Math.PI/2; // 눕혀서 앞을 바라봄
+bodyMain.position.z = 0;
+// 뒤쪽 캡
+const bodyCap = mk(new THREE.CylinderGeometry(0.68,0.68,0.06,48), matSteel);
+bodyCap.rotation.x = Math.PI/2;
+bodyCap.position.z = -0.72;
+gBody.add(bodyMain, bodyCap);
+gBody.position.set(0,1.35,0);
+root.add(gBody);
+
+// 3. FRONT PLATE — 전면 원형 디스크
+const gPlate = grp();
+const plateDisk = mk(new THREE.CylinderGeometry(0.7,0.7,0.06,48), matSteel);
+plateDisk.rotation.x = Math.PI/2;
+// 연필 투입구 (도넛 모양으로 표현)
+const pencilHole = mk(new THREE.TorusGeometry(0.18,0.04,12,32), matDark);
+// 나사 3개
+for(let i=0;i<3;i++){
+  const ang = (i/3)*Math.PI*2 + Math.PI/6;
+  const sc = mk(new THREE.CylinderGeometry(0.04,0.04,0.08,8), matChrome);
+  sc.rotation.x = Math.PI/2;
+  sc.position.set(Math.cos(ang)*0.48, Math.sin(ang)*0.48, 0.04);
+  gPlate.add(sc);
+}
+gPlate.add(plateDisk, pencilHole);
+gPlate.position.set(0,1.35,0.73);
+root.add(gPlate);
+
+// 4. GEAR TRAIN — 감속 기어 (내부에서 살짝 보임)
+const gGears = grp();
+// 큰 기어
+const gear1 = mk(new THREE.CylinderGeometry(0.42,0.42,0.1,24), matGearBlue);
+gear1.rotation.x = Math.PI/2;
+// 작은 기어 (피니언)
+const gear2 = mk(new THREE.CylinderGeometry(0.18,0.18,0.12,18), matGearGreen);
+gear2.rotation.x = Math.PI/2;
+gear2.position.set(0.38,0.28,0);
+// 기어 이빨 표현
+for(let i=0;i<16;i++){
+  const ang = (i/16)*Math.PI*2;
+  const tooth = mk(new THREE.BoxGeometry(0.06,0.08,0.12), (i%3===0?matGearRed:(i%3===1?matGearBlue:matGearGreen)));
+  tooth.rotation.x = Math.PI/2;
+  tooth.position.set(Math.cos(ang)*0.44, Math.sin(ang)*0.44, 0);
+  tooth.rotation.z = ang;
+  gGears.add(tooth);
+}
+gGears.add(gear1, gear2);
+gGears.position.set(0,1.35,-0.2);
+root.add(gGears);
+
+// 5. CRANK ARM — 크랭크 암 + 나무 손잡이
+const gCrank = grp();
+const crankHub = mk(new THREE.CylinderGeometry(0.09,0.09,0.18,16), matChrome);
+crankHub.rotation.x = Math.PI/2;
+const crankArm = mk(new THREE.BoxGeometry(0.06,0.55,0.06), matAxleYellow);
+crankArm.position.set(0,0.27,0);
+// 나무 손잡이
+const handleGrip = mk(new THREE.CylinderGeometry(0.055,0.045,0.28,16), matWood);
+handleGrip.position.set(0,0.58,0);
+const handleCap = mk(new THREE.SphereGeometry(0.055,12,12), matWood);
+handleCap.position.set(0,0.72,0);
+gCrank.add(crankHub, crankArm, handleGrip, handleCap);
+gCrank.position.set(0.72,1.35,0.3);
+gCrank.rotation.z = 0.15;
+root.add(gCrank);
+
+// 6. T-CLAMP × 2 — 상단 고정 장치
+const gClamps = grp();
+for(let s of [-1,1]){
+  const clampBase = mk(new THREE.BoxGeometry(0.18,0.08,0.35), matSteel);
+  clampBase.position.set(s*0.25,0,0);
+  const clampTop = mk(new THREE.BoxGeometry(0.35,0.06,0.08), matSteel);
+  clampTop.position.set(s*0.25,0.05,0);
+  const clampScrew = mk(new THREE.CylinderGeometry(0.035,0.035,0.15,8), matChrome);
+  clampScrew.position.set(s*0.25,0.11,0);
+  gClamps.add(clampBase, clampTop, clampScrew);
+}
+gClamps.position.set(0,2.1,0.1);
+root.add(gClamps);
+
+// 7. BLADE HOLDER — 블레이드 홀더 (캠 연동)
+const gBlade = grp();
+const bladeBody = mk(new THREE.BoxGeometry(0.35,0.12,0.18), matSteel);
+const bladeCam = mk(new THREE.CylinderGeometry(0.1,0.1,0.14,16), matGearRed);
+bladeCam.rotation.x = Math.PI/2;
+bladeCam.position.x = 0.2;
+gBlade.add(bladeBody, bladeCam);
+gBlade.position.set(0,1.35,0.45);
+root.add(gBlade);
+
+// 8. SCREWS × 3 (전면 플레이트 나사 — gPlate에 이미 있지만 별도 그룹으로도)
+const gScrews = grp();
+for(let i=0;i<3;i++){
+  const ang = (i/3)*Math.PI*2 + Math.PI/6;
+  const sc = mk(new THREE.CylinderGeometry(0.03,0.025,0.14,8), matChrome);
+  sc.rotation.x = Math.PI/2;
+  sc.position.set(Math.cos(ang)*0.48, Math.sin(ang)*0.48+1.35, 0.8);
+  sc.userData = {ang, idx:i};
+  gScrews.add(sc);
+}
+root.add(gScrews);
+
+// ── STORE ORIGINS ──
+const parts = [gBase, gBody, gPlate, gGears, gCrank, gClamps, gBlade, gScrews];
+const origins = parts.map(p=>({
+  px:p.position.x, py:p.position.y, pz:p.position.z,
+  rx:p.rotation.x, ry:p.rotation.y, rz:p.rotation.z,
+  sx:p.scale.x, sy:p.scale.y, sz:p.scale.z
+}));
+
+// ── EXPLODE TARGETS ──
+// 구조적 방향: 베이스는 아래, 전면 플레이트는 앞으로, 내부 기어는 위로 등
+const explodeTargets = [
+  {px:0,   py:-1.2, pz:0,   rx:0,  ry:0,   rz:0},   // base: 아래로
+  {px:0,   py:1.35, pz:-2.2,rx:0,  ry:0,   rz:0},   // body: 뒤로
+  {px:0,   py:1.35, pz:2.5, rx:0,  ry:0,   rz:0},   // front plate: 앞으로
+  {px:0,   py:3.2,  pz:0,   rx:0,  ry:0.4, rz:0},   // gears: 위로 + 약간 회전
+  {px:2.2, py:1.35, pz:0.8, rx:0,  ry:0,   rz:0.5}, // crank: 오른쪽으로
+  {px:0,   py:3.8,  pz:0,   rx:0,  ry:0,   rz:0},   // clamps: 위로
+  {px:0,   py:1.35, pz:1.8, rx:0,  ry:0,   rz:0},   // blade: 앞으로
+  {px:-2.0,py:1.6,  pz:1.2, rx:0,  ry:0,   rz:0},   // screws: 왼쪽+앞
+];
+
+// ── ANIMATION STATE ──
+// 3 phases: 0=assembled, 1=exploded, 2=reassembled
+// scrollProgress: 0~1 (전체 스크롤)
+// Phase transitions:
+//   0.0~0.12 : 완성품 감상
+//   0.12~0.55: 분해
+//   0.55~0.65: 분해 감상
+//   0.65~0.90: 재조립
+//   0.90~1.00: 철학 섹션
+
+const state = parts.map(()=>({t:0, vel:0}));
+
+// Stagger: 각 파츠가 약간씩 다른 타이밍에 분해 시작
+const explodeWindows = [
+  {s:0.13, e:0.32}, // base
+  {s:0.16, e:0.35}, // body
+  {s:0.19, e:0.38}, // plate
+  {s:0.22, e:0.41}, // gears
+  {s:0.25, e:0.44}, // crank
+  {s:0.28, e:0.47}, // clamps
+  {s:0.31, e:0.50}, // blade
+  {s:0.34, e:0.53}, // screws
+];
+
+function smoothstep(t){t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);}
+function smootherstep(t){t=Math.max(0,Math.min(1,t));return t*t*t*(t*(t*6-15)+10);}
+
+let scrollProgress = 0;
+addEventListener('scroll',()=>{
+  const max = document.getElementById('sd').offsetHeight - innerHeight;
+  scrollProgress = Math.max(0,Math.min(1,scrollY/max));
+},{passive:true});
+
+// ── LIGHTS ──
+// Soft studio light for pale white-gray metal: low contrast, broad highlights
+const ambient = new THREE.AmbientLight(0xFFFFFF, 0.92);
+scene.add(ambient);
+const hemi = new THREE.HemisphereLight(0xFFFFFF, 0xE9E4DA, 0.82);
+scene.add(hemi);
+
+const spot = new THREE.SpotLight(0xFFF7E8, 2.85);
+spot.position.set(3.4, 6.0, 6.2);
+spot.target.position.set(0, 1.35, 0);
+spot.angle = Math.PI / 4.1;
+spot.penumbra = 0.78;
+spot.decay = 1.25;
+spot.distance = 24;
+spot.castShadow = true;
+spot.shadow.mapSize.set(2048, 2048);
+spot.shadow.camera.near = 1;
+spot.shadow.camera.far = 28;
+spot.shadow.bias = -0.001;
+scene.add(spot);
+scene.add(spot.target);
+
+const spot2 = new THREE.SpotLight(0xFFFFFF, 1.65);
+spot2.position.set(-3.2, 3.4, 5.4);
+spot2.target.position.set(0, 1.35, 0);
+spot2.angle = Math.PI / 3.8;
+spot2.penumbra = 0.86;
+spot2.decay = 1.55;
+spot2.distance = 20;
+scene.add(spot2);
+scene.add(spot2.target);
+
+const rim = new THREE.DirectionalLight(0xEAF1FF, 0.38);
+rim.position.set(-4, 5, -4);
+scene.add(rim);
+
+// Floor
+const floor = mk(
+  new THREE.PlaneGeometry(30,30),
+  new THREE.MeshStandardMaterial({color:0xF1EEE6,roughness:0.96,metalness:0.01})
+);
+floor.rotation.x=-Math.PI/2;
+floor.receiveShadow=true;
+scene.add(floor);
+
+// Ending transition colors
+const bgLight = new THREE.Color(0x050505);
+const bgDark  = new THREE.Color(0x030303); // final near-black cinematic background
+const floorLight = new THREE.Color(0x111111);
+const floorDark  = new THREE.Color(0x050505);
+function mixHex(a,b,t){
+  t=Math.max(0,Math.min(1,t));
+  const ar=(a>>16)&255, ag=(a>>8)&255, ab=a&255;
+  const br=(b>>16)&255, bg=(b>>8)&255, bb=b&255;
+  const r=Math.round(ar+(br-ar)*t), g=Math.round(ag+(bg-ag)*t), bl=Math.round(ab+(bb-ab)*t);
+  return `rgb(${r},${g},${bl})`;
+}
+function mixRgba(a,b,t,alpha){
+  t=Math.max(0,Math.min(1,t));
+  const ar=(a>>16)&255, ag=(a>>8)&255, ab=a&255;
+  const br=(b>>16)&255, bg=(b>>8)&255, bb=b&255;
+  const r=Math.round(ar+(br-ar)*t), g=Math.round(ag+(bg-ag)*t), bl=Math.round(ab+(bb-ab)*t);
+  return `rgba(${r},${g},${bl},${alpha})`;
+}
+
+
+// ── UI STATE ──
+function updateUI(sp){
+  const hero = document.getElementById('heroBrand');
+  const tag  = document.getElementById('heroTagline');
+  const phA  = document.getElementById('phaseAssembled');
+  const phE  = document.getElementById('phaseExplode');
+  const phR  = document.getElementById('phaseReassemble');
+  const spec = document.getElementById('specCard');
+  const stM  = document.getElementById('stageM');
+  const mvq  = document.getElementById('mvqNav');
+  const phil = document.getElementById('philosophy');
+  const timeline = document.getElementById('cinemaTimeline');
+  const mvqM = document.getElementById('mvqM');
+
+  // Hero fade
+  const heroA = Math.max(0, 1 - sp * 7.5);
+  hero.style.opacity = heroA;
+  tag.style.opacity  = heroA;
+
+  // Phase labels
+  phA.classList.toggle('visible', sp > 0.02 && sp < 0.14);
+  phE.classList.toggle('visible', sp >= 0.14 && sp < 0.67);
+  phR.classList.toggle('visible', sp >= 0.67 && sp < 0.88);
+
+  // Part labels — appear during explode phase
+  const lbls = [
+    {id:'lbl-base',  s:0.13, e:0.35},
+    {id:'lbl-body',  s:0.16, e:0.40},
+    {id:'lbl-plate', s:0.19, e:0.43},
+    {id:'lbl-gear',  s:0.22, e:0.46},
+    {id:'lbl-crank', s:0.25, e:0.50},
+    {id:'lbl-clamp', s:0.28, e:0.55},
+    {id:'lbl-blade', s:0.31, e:0.58},
+    {id:'lbl-screw', s:0.34, e:0.62},
+  ];
+  lbls.forEach(l=>{
+    document.getElementById(l.id).classList.toggle('active', sp>l.s && sp<l.e);
   });
 
-  // IntersectionObserver for active section
-  const sections = document.querySelectorAll('.ds-section[id]');
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        navLinks.forEach(l => l.classList.remove('active'));
-        const active = document.querySelector(`.ds-nav a[href="#${entry.target.id}"]`);
-        if (active) active.classList.add('active');
-      }
-    });
-  }, { threshold: 0.3 });
-  sections.forEach(s => observer.observe(s));
-</script>
+  // Stage / spec
+  const showM = sp > 0.08 && sp < 0.88;
+  stM.classList.toggle('visible', showM);
+  spec.classList.toggle('visible', sp > 0.35 && sp < 0.88);
+  mvq.classList.toggle('visible', sp > 0.08 && sp < 0.88);
+  mvqM.classList.toggle('on', sp > 0.08);
 
+  // Vision statement — appears when disassembly begins and stays until the final logo reveal
+  phil.classList.toggle('visible', sp >= 0.14 && sp < 0.965);
+  if(sp > 0.90){
+    stM.classList.remove('visible');
+    spec.classList.remove('visible');
+    mvq.classList.remove('visible');
+  }
+}
+
+// ── GEAR ROTATION (idle animation) ──
+let time = 0;
+let gearAngle = 0;
+
+// ── CAMERA ──
+let camX=0, camY=2.05, camZ=5.85;
+
+function animate(){
+  requestAnimationFrame(animate);
+  time += 0.016;
+  const sp = scrollProgress;
+
+  // Cinematic ending: the white guide falls into near-black so the final copy becomes the hero.
+  const darkPhase = smootherstep((sp - 0.78) / 0.22);
+  const textHeroPhase = smootherstep((sp - 0.88) / 0.12);
+  const finalLogoPhase = smootherstep((sp - 0.965) / 0.035);
+  const bgNow = bgLight.clone().lerp(bgDark, Math.max(darkPhase, finalLogoPhase));
+  renderer.setClearColor(bgNow, 1);
+  floor.material.color.copy(floorLight.clone().lerp(floorDark, darkPhase));
+  floor.material.needsUpdate = true;
+
+  // Fade product lighting down aggressively at the end; keep only a faint rim/silhouette.
+  ambient.intensity = 0.92 * (1 - darkPhase * 0.96);
+  hemi.intensity = 0.82 * (1 - darkPhase * 0.95);
+  rim.intensity = 0.38 + darkPhase * 0.42;
+
+  // UI shifts from black technical guide to crisp white ending typography.
+  document.documentElement.style.setProperty('--dynamic-ui', mixHex(0x111111, 0xFFFFFF, darkPhase));
+  document.documentElement.style.setProperty('--dynamic-muted', mixHex(0x333333, 0xFFFFFF, Math.max(darkPhase, textHeroPhase)));
+  document.documentElement.style.setProperty('--dynamic-soft', mixRgba(0x111111, 0xFFFFFF, darkPhase, 0.58 + textHeroPhase*0.28));
+  document.documentElement.style.setProperty('--dynamic-line', mixRgba(0x111111, 0xFFFFFF, darkPhase, 0.48 + textHeroPhase*0.28));
+  document.documentElement.style.setProperty('--dynamic-card', darkPhase < 0.45 ? `rgba(255,255,255,${0.70 - darkPhase*0.55})` : `rgba(0,0,0,${0.30 + textHeroPhase*0.42})`);
+  document.documentElement.style.setProperty('--dynamic-card-border', mixRgba(0x111111, 0xFFFFFF, darkPhase, 0.28 + textHeroPhase*0.34));
+  document.documentElement.style.setProperty('--dynamic-grid', darkPhase < 0.5 ? `rgba(17,17,17,${0.05*(1-darkPhase*1.2)})` : `rgba(255,255,255,${0.018*(1-textHeroPhase)})`);
+  document.documentElement.style.setProperty('--ending-overlay', (finalLogoPhase * 0.90).toFixed(3));
+  document.documentElement.style.setProperty('--guide-opacity', (1 - smootherstep((sp - 0.82) / 0.12)).toFixed(3));
+  document.documentElement.style.setProperty('--dynamic-ui','#ffffff');
+  document.documentElement.style.setProperty('--dynamic-muted','rgba(255,255,255,.78)');
+  document.documentElement.style.setProperty('--dynamic-soft','rgba(255,255,255,.45)');
+  document.documentElement.style.setProperty('--dynamic-line','rgba(255,255,255,.42)');
+  document.documentElement.style.setProperty('--dynamic-card','rgba(10,10,10,.48)');
+  document.documentElement.style.setProperty('--dynamic-card-border','rgba(255,255,255,.14)');
+  document.documentElement.style.setProperty('--dynamic-grid','rgba(255,255,255,.055)');
+
+  // Final logo reveal: keep product/part animation intact, then fade the vision line into the logo.
+  const endingLogo = document.getElementById('endingLogo');
+  if (endingLogo) {
+    endingLogo.style.opacity = finalLogoPhase;
+    endingLogo.style.transform = `translate(-50%, -50%) scale(${0.92 + finalLogoPhase * 0.16})`;
+  }
+  const philEl = document.getElementById('philosophy');
+  if (philEl) {
+    philEl.style.opacity = (sp >= 0.14 && sp < 0.965) ? (1 - finalLogoPhase) : 0;
+  }
+
+
+  // Hero view: start at a three-quarter angle, then settle to front view before the disassembly begins
+  const heroTurn = 1 - smootherstep(sp / 0.13);
+  root.rotation.y += ((-0.58 * heroTurn) - root.rotation.y) * 0.08;
+  root.rotation.x += ((0.035 * heroTurn) - root.rotation.x) * 0.08;
+
+  // ── UPDATE PART POSITIONS ──
+  parts.forEach((p,i)=>{
+    const win = explodeWindows[i];
+    const o = origins[i];
+    const tg = explodeTargets[i];
+
+    // Explode amount: 0→1 during explode, 1→0 during reassemble
+    let explodeT = 0;
+    if(sp >= win.s && sp < 0.65){
+      // Exploding
+      const raw = (sp - win.s) / (win.e - win.s);
+      explodeT = smootherstep(Math.min(1, raw));
+    } else if(sp >= 0.65 && sp < 0.90){
+      // Reassembling — reverse with stagger (later parts reassemble first in reverse)
+      const reassembleStart = 0.65 + (parts.length-1-i)*0.018;
+      const raw = (sp - reassembleStart) / 0.12;
+      explodeT = smootherstep(Math.max(0, 1 - Math.min(1, raw)));
+    } else if(sp < win.s){
+      explodeT = 0;
+    } else if(sp >= 0.90){
+      explodeT = 0;
+    }
+
+    // Spring lerp toward target
+    const target = explodeT;
+    const diff = target - state[i].t;
+    state[i].t += diff * 0.07;
+
+    const t = state[i].t;
+
+    // Special: screws rotate as they come out
+    if(i === 7){
+      p.children.forEach((sc, ci)=>{
+        const ang = sc.userData.ang || 0;
+        sc.rotation.y = t * Math.PI * 4;
+      });
+    }
+
+    // Subtle hesitation: tiny pull-back before releasing
+    let ease = t;
+    if(t > 0.01 && t < 0.12){
+      ease = t * (1 - Math.sin((t/0.12)*Math.PI)*0.06);
+    }
+
+    p.position.x = o.px + (tg.px - o.px) * ease;
+    p.position.y = o.py + (tg.py - o.py) * ease;
+    p.position.z = o.pz + (tg.pz - o.pz) * ease;
+    p.rotation.x = o.rx + (tg.rx - o.rx) * ease;
+    p.rotation.y = o.ry + (tg.ry - o.ry) * ease;
+    p.rotation.z = o.rz + (tg.rz - o.rz) * ease;
+  });
+
+  // Gear idle rotation
+  gearAngle += 0.008;
+  if(gGears.children[0]) gGears.children[0].rotation.y = gearAngle;
+  if(gGears.children[1]) gGears.children[1].rotation.y = -gearAngle * 2.3;
+
+  // Crank idle sway
+  gCrank.rotation.z = 0.15 + Math.sin(time*0.6)*0.04;
+
+  // 스포트라이트 — 분해 시 새 기본 각도(π/5)를 기준으로 더 넓고 부드럽게 확장
+  const explodeAmt = Math.max(...state.map(s=>s.t));
+  // 완성품: 전면을 살리는 넓은 빔 / 분해: 파츠 전체를 덮는 더 넓은 빔
+  spot.angle = (Math.PI / 4.1) + explodeAmt * (Math.PI / 14);
+  spot.intensity = (2.85 - explodeAmt * 0.25) * (1 - darkPhase * 0.92) + darkPhase * 0.08;
+  spot2.angle = (Math.PI / 3.8) + explodeAmt * (Math.PI / 18);
+  spot2.intensity = (1.65 + explodeAmt * 0.35) * (1 - darkPhase * 0.96);
+  // 타깃: 완성 시 제품 중심, 분해 시 약간 위로 올라가 전체 조망
+  spot.target.position.y = 1.3 + explodeAmt * 1.1;
+  spot2.target.position.y = 1.3 + explodeAmt * 0.8;
+  spot.target.updateMatrixWorld();
+  spot2.target.updateMatrixWorld();
+
+  // Camera drift — opening starts slightly off-axis, then returns to front before explode
+  const heroView = 1 - smootherstep(sp / 0.13);
+  const targetCamY = 2.12 + sp * 0.78;
+  const targetCamZ = 5.25 + sp * 0.95 - heroView * 0.28;
+  const targetCamX = heroView * 0.58 + (sp > 0.55 ? Math.sin(time*0.12)*0.65 : 0);
+  camX += (targetCamX - camX)*0.04;
+  camY += (targetCamY - camY)*0.04;
+  camZ += (targetCamZ - camZ)*0.04;
+  camera.position.set(camX, camY, camZ);
+  camera.lookAt(0, 1.5, 0);
+
+  updateUI(sp);
+  renderer.render(scene, camera);
+}
+
+// Init
+setTimeout(()=>{
+  document.getElementById('heroBrand').classList.add('visible');
+  document.getElementById('heroTagline').classList.add('visible');
+  document.getElementById('phaseAssembled').classList.add('visible');
+},400);
+
+animate();
+</script>
 </body>
 </html>
